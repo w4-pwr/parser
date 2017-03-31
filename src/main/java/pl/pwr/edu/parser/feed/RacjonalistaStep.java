@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 public class RacjonalistaStep implements Step {
@@ -20,6 +21,7 @@ public class RacjonalistaStep implements Step {
 
     @Override
     public List<Article> parse() {
+        Random rand = new Random();
         List<Article> articles = new ArrayList<>();
 
         List<String> links = getArticlesLinks();
@@ -28,7 +30,7 @@ public class RacjonalistaStep implements Step {
                 Article article = parseLink(link);
                 articles.add(article);
                 System.out.println(article);
-                Thread.sleep(300);
+                Thread.sleep(rand.nextInt(1000) + 700);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 Thread.currentThread().interrupt();
@@ -58,7 +60,7 @@ public class RacjonalistaStep implements Step {
     private Article parseLink(String articleUrl) {
         RacjonalistaArticle article = new RacjonalistaArticle();
         try {
-            Document doc = Jsoup.connect(baseUrl + articleUrl).get();
+            Document doc = Jsoup.connect(baseUrl + articleUrl).userAgent("Mozilla/5.0").get();
 
             article.setTitle(doc.select("meta[property=og:title]").attr("content"));
             parseArticleMetaData(article, doc);
@@ -91,7 +93,7 @@ public class RacjonalistaStep implements Step {
         Element nextPageButton = doc.select(".pg").last();
         if (nextPageButton != null && nextPageButton.childNode(0) instanceof TextNode) {
             String nextPageLink = nextPageButton.attr("href");
-            Document newPageDoc = Jsoup.connect(baseUrl + nextPageLink).get();
+            Document newPageDoc = Jsoup.connect(baseUrl + nextPageLink).userAgent("Mozilla/5.0").get();
             parseArticleBody(newPageDoc, pages);
         }
 
