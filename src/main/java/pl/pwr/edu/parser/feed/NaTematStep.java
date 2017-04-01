@@ -5,6 +5,7 @@ import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import pl.pwr.edu.parser.model.Article;
+import pl.pwr.edu.parser.model.NaTematArticle;
 import pl.pwr.edu.parser.model.Quote;
 import pl.pwr.edu.parser.model.RacjonalistaArticle;
 
@@ -27,16 +28,11 @@ public class NaTematStep implements Step {
         List<Article> articles = new ArrayList<>();
 
         List<String> links = getArticlesLinks();
-        links.stream().forEach(link -> {
-            try {
-                Article article = parseLink(link);
+        links.stream().parallel().forEach(link -> {
+            Article article = parseLink(link);
+            if(article!=null)
                 articles.add(article);
-                System.out.println(article);
-                Thread.sleep(rand.nextInt(1000));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                Thread.currentThread().interrupt();
-            }
+            System.out.println(article);
         });
 
         return articles;
@@ -102,11 +98,17 @@ public class NaTematStep implements Step {
 
 
     private Article parseLink(String articleUrl) {
-        RacjonalistaArticle article = new RacjonalistaArticle();
+        Article article = new NaTematArticle();
         try {
             Document doc = Jsoup.connect(articleUrl).userAgent("Mozilla/5.0").get();
 
-            article.setTitle(doc.select(".art__title").first().text());
+            //kiedy artykuł jest złożony z wielu artykułów lub jest reklamą
+            //bardzo żadko ale morze się zdarzyć
+            //przykład http://natemat.pl/199073,witaminy-dla-dzieci-aspiryna-srodek-na-niestrawnosci-najlepsze-kosmetyki-jakie-mialas-leza-w-twojej-apteczce
+            if(doc.select(".art__title").first()==null){
+                return null;
+            }
+            article.setTitle(doc.select(".art__title").first().text().trim());
             parseArticleMetaData(article, doc);
             article.setBody(parseArticleBody(doc, article.getMetadata()));
             article.setQuotes(parseArticleQuotes(doc));
@@ -117,7 +119,7 @@ public class NaTematStep implements Step {
         return article;
     }
 
-    private void parseArticleMetaData(RacjonalistaArticle article, Document doc) {
+    private void parseArticleMetaData(Article article, Document doc) {
         HashMap<String, String> metaData = new HashMap<>();
         metaData.put("author", doc.select(".art__author__name").first().text().trim());
         metaData.put("category", getCategory(doc));
