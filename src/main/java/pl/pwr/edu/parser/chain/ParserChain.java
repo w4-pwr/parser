@@ -1,5 +1,6 @@
 package pl.pwr.edu.parser.chain;
 
+import pl.pwr.edu.parser.feed.NaTematStep;
 import pl.pwr.edu.parser.feed.RacjonalistaStep;
 import pl.pwr.edu.parser.feed.Step;
 import pl.pwr.edu.parser.model.Article;
@@ -17,6 +18,7 @@ public class ParserChain {
         articles = new ArrayList<>();
         parsingSteps = new ArrayList<>();
         parsingSteps.add(new RacjonalistaStep());
+        parsingSteps.add(new NaTematStep());
     }
 
     public void fire() {

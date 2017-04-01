@@ -8,4 +8,6 @@ public interface Step {
 
     List<Article> parse();
 
+    default void setYearToCheck(String yearToCheck){};
+
 }
