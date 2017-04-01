@@ -25,29 +25,34 @@ public class PrawicaStep implements Step {
         Random rand = new Random();
         List<Article> articles = new ArrayList<>();
 
-
-        //pasek postępu -> do usuniecia
-        IntStream.range(0,409).forEach(i-> System.out.print("."));
-        System.out.println("XX");
-
-        List<String> links = getArticlesLinks(baseUrl,null);
-
+        List<String> links = getArticlesLinks();
+        System.out.println(links.size());
         links.forEach(link -> {
-            try {
-                Article article = parseLink(link);
-                articles.add(article);
-                System.out.println(article);
-                Thread.sleep(rand.nextInt(1000));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                Thread.currentThread().interrupt();
-            }
+            Article article = parseLink(link);
+            articles.add(article);
+            System.out.println(article);
         });
 
         return articles;
     }
 
-    private List<String> getArticlesLinks( String url, List<String> links) {
+    private List<String> getArticlesLinks() {
+
+        ArrayList<String> links = new ArrayList<>();
+
+        try {
+            Document doc = Jsoup.connect(baseUrl).get();
+            int pages = numberOfPages(doc);
+            IntStream.range(0,pages).forEach(i-> System.out.print("."));
+            System.out.println("END");
+            IntStream.range(0,pages).forEach(i->getArticlesLinks(baseUrl+"/?page="+i,links));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return links;
+    }
+    private void getArticlesLinks( String url, List<String> links) {
         if(links==null) {
             links = new ArrayList<>();
         }
@@ -61,17 +66,10 @@ public class PrawicaStep implements Step {
                     .stream()
                     .map(link ->link.select("a").first().attr("href"))
                     .collect(Collectors.toList()));
-            Element nextPage = doc.select(".pager-next").first();
-            if(nextPage.select("a").first()!=null){
-                System.out.print(".");
-                String link = nextPage.select("a").first().attr("href");
-                links.addAll(getArticlesLinks(link,links));
-            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        return links;
+        System.out.print(".");
     }
 
     private Article parseLink(String articleUrl) {
@@ -107,10 +105,15 @@ public class PrawicaStep implements Step {
         return doc.select(".field-item").first().select("p").text().trim();
     }
 
+    private int numberOfPages(Document doc){
+        String[] pages=doc.select(".pager-current").first().text().trim().split(" z ");
+        return new Integer(pages[1]);
+    }
     public static void main(String[] args) {
 
         //main do testów -> potem wywalic
         PrawicaStep prawicaStep = new PrawicaStep();
         prawicaStep.parse();
     }
+
 }

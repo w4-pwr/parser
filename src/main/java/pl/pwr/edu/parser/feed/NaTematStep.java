@@ -1,16 +1,13 @@
 package pl.pwr.edu.parser.feed;
 
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import pl.pwr.edu.parser.model.Article;
 import pl.pwr.edu.parser.model.NaTematArticle;
 import pl.pwr.edu.parser.model.Quote;
-import pl.pwr.edu.parser.model.RacjonalistaArticle;
 
 import java.io.IOException;
-import java.sql.Time;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -32,7 +29,6 @@ public class NaTematStep implements Step {
             Article article = parseLink(link);
             if(article!=null)
                 articles.add(article);
-            System.out.println(article);
         });
 
         return articles;
@@ -94,8 +90,6 @@ public class NaTematStep implements Step {
         }
         return links;
     }
-
-
 
     private Article parseLink(String articleUrl) {
         Article article = new NaTematArticle();
