@@ -1,7 +1,5 @@
 package pl.pwr.edu.parser.model;
 
-import com.sun.org.apache.xpath.internal.operations.Quo;
-
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +11,10 @@ public abstract class Article {
     private String body;
     private HashMap<String, String> metadata = new HashMap<>();
     private List<Quote> quotes = new ArrayList<>();
+
+    public Article(URL url) {
+        this.source = url;
+    }
 
     public String getTitle() {
         return title;
@@ -48,10 +50,6 @@ public abstract class Article {
     public Article setQuotes(List<Quote> quotes) {
         this.quotes = quotes;
         return this;
-    }
-
-    public Article(URL url) {
-        this.source = url;
     }
 
     @Override
