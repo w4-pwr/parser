@@ -8,7 +8,10 @@ import pl.pwr.edu.parser.model.NaTematArticle;
 import pl.pwr.edu.parser.model.Quote;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -157,7 +160,7 @@ public class NaTematStep implements Step {
         doc.select(".art__body").first().select("blockquote").forEach(s -> {
             Quote quote = new Quote();
             Element author = s.select(".author-about .name").first();
-            quote.setAuthor(author != null ? author.text().trim() : "");
+            quote.setDescription(author != null ? author.text().trim() : "");
             Element body = s.select("p").first();
             if (body != null) {
                 quote.setBody(body.text().trim());
@@ -171,7 +174,7 @@ public class NaTematStep implements Step {
         doc.select(".art__body").first().select(".EmbeddedTweet-tweet").forEach(s -> {
             Quote quote = new Quote();
             Element author = s.select(".TweetAuthor-name").first();
-            quote.setAuthor(author != null ? author.text().trim() : "");
+            quote.setDescription(author != null ? author.text().trim() : "");
             Element body = s.select("p").first();
             if (body != null) {
                 quote.setBody(body.text().trim());
