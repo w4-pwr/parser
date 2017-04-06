@@ -54,6 +54,13 @@ public class RacjonalistaStep implements Step {
         parseArticleMetaData(article, doc);
 
         article.setBody(joinArticlePages(article, doc));
+
+//        File dir = new File(System.getProperty("user.home")
+//                + "\\Desktop\\Racjonalista\\");
+//        dir.mkdir();
+//        JAXB.marshal(article,
+//                dir.getAbsolutePath() + "\\" + article.hashCode() + ".xml");
+
         return article;
     }
 
@@ -90,8 +97,11 @@ public class RacjonalistaStep implements Step {
         Elements quotes = doc.select(".cytat,blockquote,.przyp");
         Elements descriptions = doc.select(".fn>span");
 
-        quotes.forEach(quote -> parseQuote(quote, descriptions, res));
-        quotes.remove();
+        quotes.forEach(quote -> {
+            parseQuote(quote, descriptions, res);
+            if (quote.parent() != null)
+                quote.remove();
+        });
 
         return res;
     }
@@ -121,7 +131,14 @@ public class RacjonalistaStep implements Step {
         Matcher matcher = FOOTNOTE_PATTERN.matcher(quote.text());
 
         if (matcher.find()) {
-            q.setDescription(findQuoteDescription(descriptions, matcher));
+            String description = "";
+            try {
+                description = findQuoteDescription(descriptions, matcher);
+            } catch (IndexOutOfBoundsException e) {
+                System.out.println("Broken quote description replaced with empty string");
+            }
+
+            q.setDescription(description);
             return quote.text().replaceAll(FOOTNOTE_PATTERN.pattern(), "").trim();
         } else {
             q.setDescription("");
@@ -129,7 +146,7 @@ public class RacjonalistaStep implements Step {
         }
     }
 
-    private String findQuoteDescription(Elements descriptions, Matcher matcher) {
+    private String findQuoteDescription(Elements descriptions, Matcher matcher) throws IndexOutOfBoundsException {
         String footnoteNumber = matcher.group(1);
         Element description = descriptions
                 .stream()
@@ -148,8 +165,10 @@ public class RacjonalistaStep implements Step {
      */
     @Nullable
     private String findTextBeforeFootnoteMarks(Element quote) {
-        if (quote.parent().parent().tagName().equals("blockquote")
-                || quote.parent().className().equals("cytat"))
+        if (quote.parent() != null
+                && quote.parent().parent() != null
+                && (quote.parent().parent().tagName().equals("blockquote")
+                || quote.parent().className().equals("cytat")))
             return null;
 
         Node node = findNonEmptyChildNode(quote);
