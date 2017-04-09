@@ -7,34 +7,51 @@ import pl.pwr.edu.parser.model.Article;
 import pl.pwr.edu.parser.model.NaTematArticle;
 import pl.pwr.edu.parser.model.Quote;
 
+import javax.xml.bind.JAXB;
+import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class NaTematStep implements Step {
 
+    private static final int MAX_CONNECTION = 5;
     private String yearToCheck = "";
     private static String baseUrl = "http://natemat.pl";
     private static String articleListUrl = "http://natemat.pl/posts-map/";
+    private static List<Article> articles = new ArrayList<>();
+    private static Random rand = new Random();
 
+    private static int SLEEP_TIME = 5500;
+    private int i = 0;
+    private int size = 0;
 
     @Override
     public List<Article> parse() {
-        Random rand = new Random();
-        List<Article> articles = new ArrayList<>();
-
         List<String> links = getArticlesLinks();
-        links.stream().parallel().forEach(link -> {
-            Article article = parseLink(link);
-            if(article!=null)
-                articles.add(article);
-        });
+        size = links.size();
+        links.forEach(link -> parse(link));
 
         return articles;
+    }
+
+    private void parse(String link) {
+        Article article = parseLink(link);
+        i++;
+        if (article != null) {
+            articles.add(article);
+            //addToXML(article);
+        }
+        System.out.println(i + "/" + size);
+    }
+
+    private void addToXML(Article article) {
+        File dir = new File(System.getProperty("user.home")
+                + "\\Desktop\\NaTemat\\");
+        dir.mkdir();
+        JAXB.marshal(article,
+                dir.getAbsolutePath() + "\\" + article.hashCode() + ".xml");
     }
 
     private List<String> getSubcategoriesLinks() {
@@ -46,7 +63,7 @@ public class NaTematStep implements Step {
                     .select("a")
                     .stream()
                     .map(link -> link.attr("href"))
-                    .filter(l->isFromYear(l))
+                    .filter(l -> isFromYear(l))
                     .collect(Collectors.toList()));
         } catch (IOException e) {
             e.printStackTrace();
@@ -97,23 +114,36 @@ public class NaTematStep implements Step {
     private Article parseLink(String articleUrl) {
         Article article = new NaTematArticle();
         try {
-            Document doc = Jsoup.connect(articleUrl).userAgent("Mozilla/5.0").get();
+            Document doc = connect(articleUrl);
+            if (doc == null)
+                return null;
 
             //kiedy artykuł jest złożony z wielu artykułów lub jest reklamą
             //bardzo żadko ale morze się zdarzyć
             //przykład http://natemat.pl/199073,witaminy-dla-dzieci-aspiryna-srodek-na-niestrawnosci-najlepsze-kosmetyki-jakie-mialas-leza-w-twojej-apteczce
-            if(doc.select(".art__title").first()==null){
+            if (doc.select(".art__title").first() == null) {
                 return null;
             }
             article.setTitle(doc.select(".art__title").first().text().trim());
             parseArticleMetaData(article, doc);
-            article.setBody(parseArticleBody(doc, article.getMetadata()));
             article.setQuotes(parseArticleQuotes(doc));
+            article.setBody(parseArticleBody(doc, article.getMetadata()));
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return article;
+    }
+
+    private static Document connect(String url) {
+        for (int i = 0; i < MAX_CONNECTION; i++) {
+            try {
+                return Jsoup.connect(url).userAgent("Mozilla/5.0").get();
+            } catch (IOException e) {
+                sleepThread();
+            }
+        }
+        return null;
     }
 
     private void parseArticleMetaData(Article article, Document doc) {
@@ -129,23 +159,24 @@ public class NaTematStep implements Step {
 
     private String getCategory(Document doc) {
         String category = doc.select(".art__progress__category").first().text().trim();
-        if (category.isEmpty()){
+        if (category.isEmpty()) {
             category = doc.getElementsByAttribute("data-category").first().attributes().get("data-category");
         }
         return category;
     }
 
     private String findTopics(Document doc) {
+        doc.select(".art__header__photo__caption").remove();
         Element topics = doc.select(".art__topics__list").first();
-        if(topics==null)
+        if (topics == null)
             return "";
-        return topics.select("li").stream().filter(e->!e.hasClass("art__topics__header")).map(e->e.text().trim()).collect(Collectors.joining(","));
+        return topics.select("li").stream().filter(e -> !e.hasClass("art__topics__header")).map(e -> e.text().trim()).collect(Collectors.joining(","));
     }
 
     private String parseArticleBody(Document doc, HashMap<String, String> metaData) throws IOException {
 
-        String page = doc.select(".art__body").first().text();
-        return page.replaceFirst(metaData.get("author"), "").replaceFirst(metaData.get("date"), "").replace("(http.*)\\/","");
+        String page = doc.select(".art__body").first().text().trim();
+        return page.replaceFirst(metaData.get("author"), "").replaceFirst(metaData.get("date"), "").replace("http.?://\\S+", "");
     }
 
     private List<Quote> parseArticleQuotes(Document doc) throws IOException {
@@ -166,6 +197,8 @@ public class NaTematStep implements Step {
                 quote.setBody(body.text().trim());
                 quotes.add(quote);
             }
+            s.remove();
+
 
         });
     }
@@ -180,6 +213,7 @@ public class NaTematStep implements Step {
                 quote.setBody(body.text().trim());
                 quotes.add(quote);
             }
+            s.remove();
 
         });
     }
@@ -194,5 +228,14 @@ public class NaTematStep implements Step {
     @Override
     public void setYearToCheck(String yearToCheck) {
         this.yearToCheck = yearToCheck;
+    }
+
+    private static void sleepThread() {
+        try {
+            Thread.sleep(rand.nextInt(500) + SLEEP_TIME);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Thread.currentThread().interrupt();
+        }
     }
 }

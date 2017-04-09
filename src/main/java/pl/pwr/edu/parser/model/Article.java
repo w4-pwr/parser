@@ -57,9 +57,9 @@ public abstract class Article {
         return "Article{" +
                 "source=" + source +
                 ", title='" + title + '\'' +
-                ", body='" + body + '\'' +
                 ", metadata=" + metadata +
                 ", quotes=" + quotes +
+                ", body='" + body + '\'' +
                 '}';
     }
 }

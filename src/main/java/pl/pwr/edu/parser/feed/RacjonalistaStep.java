@@ -13,6 +13,7 @@ import pl.pwr.edu.parser.model.Quote;
 import pl.pwr.edu.parser.model.RacjonalistaArticle;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
