@@ -3,16 +3,18 @@ package pl.pwr.edu.parser.feed;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import pl.pwr.edu.parser.connector.DocumentReader;
+import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.model.Article;
 import pl.pwr.edu.parser.model.NaTematArticle;
 import pl.pwr.edu.parser.model.Quote;
 
-import javax.xml.bind.JAXB;
-import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class NaTematStep implements Step {
 
@@ -21,38 +23,30 @@ public class NaTematStep implements Step {
     private static String baseUrl = "http://natemat.pl";
     private static String articleListUrl = "http://natemat.pl/posts-map/";
     private static List<Article> articles = new ArrayList<>();
-    private static Random rand = new Random();
+    private static String dir = System.getProperty("user.home") + "\\Desktop\\Prawica\\";
 
     private static int SLEEP_TIME = 5500;
-    private int i = 0;
-    private int size = 0;
+    private int parsedArticles = 0;
 
     @Override
     public List<Article> parse() {
         List<String> links = getArticlesLinks();
-        size = links.size();
-        links.forEach(link -> parse(link));
-
+        int size = links.size();
+        LoadingBar loadingBar = new LoadingBar();
+        loadingBar.setHorizontalMaxNumber(size);
+        links.parallelStream().peek(a -> loadingBar.indicateHorizontalLoading(parsedArticles)).forEach(link -> parse(link));
         return articles;
     }
 
     private void parse(String link) {
         Article article = parseLink(link);
-        i++;
+        parsedArticles++;
         if (article != null) {
             articles.add(article);
-            //addToXML(article);
+            // XmlWriter.writeArticleToFile(dir,article);
         }
-        System.out.println(i + "/" + size);
     }
 
-    private void addToXML(Article article) {
-        File dir = new File(System.getProperty("user.home")
-                + "\\Desktop\\NaTemat\\");
-        dir.mkdir();
-        JAXB.marshal(article,
-                dir.getAbsolutePath() + "\\" + article.hashCode() + ".xml");
-    }
 
     private List<String> getSubcategoriesLinks() {
         List<String> links = new ArrayList<>();
@@ -63,7 +57,7 @@ public class NaTematStep implements Step {
                     .select("a")
                     .stream()
                     .map(link -> link.attr("href"))
-                    .filter(l -> isFromYear(l))
+                    .filter(link -> isFromYear(link))
                     .collect(Collectors.toList()));
         } catch (IOException e) {
             e.printStackTrace();
@@ -73,21 +67,16 @@ public class NaTematStep implements Step {
     }
 
     private List<String> getArticlesLinks() {
-        List<String> links = new ArrayList<>();
+        LoadingBar loadingBar = new LoadingBar();
 
         List<String> subcategoriesLinks = getSubcategoriesLinks();
-        System.out.println("Subcategories pages to parse : " + subcategoriesLinks.size());
+        loadingBar.createVerticalLoadingBar(subcategoriesLinks.size());
 
-        //Drawing loading bar ->  to be removed
-        IntStream.range(0, subcategoriesLinks.size()).forEach(i -> System.out.print("."));
-        System.out.println("XX");
+        List<String> links = subcategoriesLinks.parallelStream().
+                map(s -> getArticlesForSubcategory(s))
+                .peek(s -> loadingBar.indicateVerticalLoading())
+                .flatMap(List::stream).collect(Collectors.toList());
 
-        links.addAll(subcategoriesLinks.stream().parallel().map(s -> {
-            System.out.print(".");
-            return getArticlesForSubcategory(s);
-        }).flatMap(List::stream).collect(Collectors.toList()));
-
-        System.out.println("\n number of pages to parse : " + links.size());
         return links;
     }
 
@@ -113,38 +102,23 @@ public class NaTematStep implements Step {
 
     private Article parseLink(String articleUrl) {
         Article article = new NaTematArticle();
-        try {
-            Document doc = connect(articleUrl);
-            if (doc == null)
-                return null;
 
-            //kiedy artykuł jest złożony z wielu artykułów lub jest reklamą
-            //bardzo żadko ale morze się zdarzyć
-            //przykład http://natemat.pl/199073,witaminy-dla-dzieci-aspiryna-srodek-na-niestrawnosci-najlepsze-kosmetyki-jakie-mialas-leza-w-twojej-apteczce
-            if (doc.select(".art__title").first() == null) {
-                return null;
-            }
-            article.setTitle(doc.select(".art__title").first().text().trim());
-            parseArticleMetaData(article, doc);
-            article.setQuotes(parseArticleQuotes(doc));
-            article.setBody(parseArticleBody(doc, article.getMetadata()));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Document doc = DocumentReader.getDocument(articleUrl, MAX_CONNECTION, SLEEP_TIME);
+
+        Elements titleElement = doc.select(".art__title");
+        if (doc == null || titleElement == null || titleElement.isEmpty())
+            return null;
+
+        article.setTitle(titleElement.first().text().trim());
+        parseArticleMetaData(article, doc);
+        article.setQuotes(parseArticleQuotes(doc));
+        removeFootNotes(doc);
+        article.setBody(parseArticleBody(doc, article.getMetadata()));
+
 
         return article;
     }
 
-    private static Document connect(String url) {
-        for (int i = 0; i < MAX_CONNECTION; i++) {
-            try {
-                return Jsoup.connect(url).userAgent("Mozilla/5.0").get();
-            } catch (IOException e) {
-                sleepThread();
-            }
-        }
-        return null;
-    }
 
     private void parseArticleMetaData(Article article, Document doc) {
         HashMap<String, String> metaData = new HashMap<>();
@@ -173,24 +147,25 @@ public class NaTematStep implements Step {
         return topics.select("li").stream().filter(e -> !e.hasClass("art__topics__header")).map(e -> e.text().trim()).collect(Collectors.joining(","));
     }
 
-    private String parseArticleBody(Document doc, HashMap<String, String> metaData) throws IOException {
+    private String parseArticleBody(Document doc, HashMap<String, String> metaData) {
 
         String page = doc.select(".art__body").first().text().trim();
         return page.replaceFirst(metaData.get("author"), "").replaceFirst(metaData.get("date"), "").replace("http.?://\\S+", "");
     }
 
-    private List<Quote> parseArticleQuotes(Document doc) throws IOException {
+    private List<Quote> parseArticleQuotes(Document doc) {
 
         List<Quote> quotes = new ArrayList<>();
-        getQuotesFromBlock(doc, quotes);
-        getQuotesFromTweets(doc, quotes);
+        getQuotes(doc,quotes,"blockquote",".author-about .name");
+        getQuotes(doc,quotes,".EmbeddedTweet-tweet",".TweetAuthor-name");
         return quotes;
     }
 
-    private void getQuotesFromBlock(Document doc, List<Quote> quotes) {
-        doc.select(".art__body").first().select("blockquote").forEach(s -> {
+
+    private void getQuotes(Document doc, List<Quote> quotes,String blockSelector,String authorSelector) {
+        doc.select(".art__body").first().select(blockSelector).forEach(s -> {
             Quote quote = new Quote();
-            Element author = s.select(".author-about .name").first();
+            Element author = s.select(authorSelector).first();
             quote.setDescription(author != null ? author.text().trim() : "");
             Element body = s.select("p").first();
             if (body != null) {
@@ -202,20 +177,9 @@ public class NaTematStep implements Step {
 
         });
     }
-
-    private void getQuotesFromTweets(Document doc, List<Quote> quotes) {
-        doc.select(".art__body").first().select(".EmbeddedTweet-tweet").forEach(s -> {
-            Quote quote = new Quote();
-            Element author = s.select(".TweetAuthor-name").first();
-            quote.setDescription(author != null ? author.text().trim() : "");
-            Element body = s.select("p").first();
-            if (body != null) {
-                quote.setBody(body.text().trim());
-                quotes.add(quote);
-            }
-            s.remove();
-
-        });
+    private void removeFootNotes(Document doc) {
+        doc.select(".art__body__photo").remove();
+        doc.select("em").remove();
     }
 
     private boolean isFromYear(String link) {
@@ -230,12 +194,5 @@ public class NaTematStep implements Step {
         this.yearToCheck = yearToCheck;
     }
 
-    private static void sleepThread() {
-        try {
-            Thread.sleep(rand.nextInt(500) + SLEEP_TIME);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            Thread.currentThread().interrupt();
-        }
-    }
+
 }
