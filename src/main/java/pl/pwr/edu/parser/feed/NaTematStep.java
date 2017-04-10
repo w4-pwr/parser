@@ -1,5 +1,7 @@
 package pl.pwr.edu.parser.feed;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -9,6 +11,7 @@ import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.model.Article;
 import pl.pwr.edu.parser.model.NaTematArticle;
 import pl.pwr.edu.parser.model.Quote;
+import pl.pwr.edu.parser.xml.XmlWriter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,8 +45,8 @@ public class NaTematStep implements Step {
         Article article = parseLink(link);
         parsedArticles++;
         if (article != null) {
-            articles.add(article);
-            // XmlWriter.writeArticleToFile(dir,article);
+            //articles.add(article);
+            XmlWriter.writeArticleToFile(dir,article);
         }
     }
 
@@ -111,6 +114,9 @@ public class NaTematStep implements Step {
 
         article.setTitle(titleElement.first().text().trim());
         parseArticleMetaData(article, doc);
+        if(!article.getMetadata().containsKey("author")){
+            return null;
+        }
         article.setQuotes(parseArticleQuotes(doc));
         removeFootNotes(doc);
         article.setBody(parseArticleBody(doc, article.getMetadata()));
@@ -122,13 +128,31 @@ public class NaTematStep implements Step {
 
     private void parseArticleMetaData(Article article, Document doc) {
         HashMap<String, String> metaData = new HashMap<>();
-        metaData.put("author", doc.select(".art__author__name").first().text().trim());
+
+        String author = getAuthor(doc);
+        if (author == null) return;
+        metaData.put("author", author);
         metaData.put("category", getCategory(doc));
-        metaData.put("date", doc.select(".art__date").first().text().trim());
+        metaData.put("date", getDate(doc));
         metaData.put("keywords", findTopics(doc));
         metaData.put("description", doc.select("meta[property=og:description]").attr("content").trim());
 
         article.setMetadata(metaData);
+    }
+
+    private String getDate(Document doc) {
+        Element dateElement = doc.select(".art__date").first();
+        dateElement.remove();
+        return dateElement.text().trim();
+    }
+
+    private String getAuthor(Document doc) {
+        Element authorElement = doc.select(".art__author__name").first();
+        String author = authorElement.text().trim();
+        if(author.contains("Partnerem"))
+            return null;
+        authorElement.remove();
+        return author;
     }
 
     private String getCategory(Document doc) {
@@ -150,7 +174,7 @@ public class NaTematStep implements Step {
     private String parseArticleBody(Document doc, HashMap<String, String> metaData) {
 
         String page = doc.select(".art__body").first().text().trim();
-        return page.replaceFirst(metaData.get("author"), "").replaceFirst(metaData.get("date"), "").replace("http.?://\\S+", "");
+        return page.replaceFirst(metaData.get("author"), "").replace("http.?://\\S+", "");
     }
 
     private List<Quote> parseArticleQuotes(Document doc) {
