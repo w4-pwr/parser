@@ -1,7 +1,5 @@
 package pl.pwr.edu.parser.feed;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -25,8 +23,7 @@ public class NaTematStep implements Step {
     private String yearToCheck = "";
     private static String baseUrl = "http://natemat.pl";
     private static String articleListUrl = "http://natemat.pl/posts-map/";
-    private static List<Article> articles = new ArrayList<>();
-    private static String dir = System.getProperty("user.home") + "\\Desktop\\Prawica\\";
+    private static String dir = System.getProperty("user.home") + "\\Desktop\\NaTemat\\";
 
     private static int SLEEP_TIME = 5500;
     private int parsedArticles = 0;
@@ -38,7 +35,7 @@ public class NaTematStep implements Step {
         LoadingBar loadingBar = new LoadingBar();
         loadingBar.setHorizontalMaxNumber(size);
         links.parallelStream().peek(a -> loadingBar.indicateHorizontalLoading(parsedArticles)).forEach(link -> parse(link));
-        return articles;
+        return new ArrayList<>();
     }
 
     private void parse(String link) {
@@ -46,7 +43,7 @@ public class NaTematStep implements Step {
         parsedArticles++;
         if (article != null) {
             //articles.add(article);
-            XmlWriter.writeArticleToFile(dir,article);
+            XmlWriter.writeArticleToFile(dir, article);
         }
     }
 
@@ -114,7 +111,7 @@ public class NaTematStep implements Step {
 
         article.setTitle(titleElement.first().text().trim());
         parseArticleMetaData(article, doc);
-        if(!article.getMetadata().containsKey("author")){
+        if (!article.getMetadata().containsKey("author")) {
             return null;
         }
         article.setQuotes(parseArticleQuotes(doc));
@@ -149,7 +146,7 @@ public class NaTematStep implements Step {
     private String getAuthor(Document doc) {
         Element authorElement = doc.select(".art__author__name").first();
         String author = authorElement.text().trim();
-        if(author.contains("Partnerem"))
+        if (author.contains("Partnerem"))
             return null;
         authorElement.remove();
         return author;
@@ -180,13 +177,13 @@ public class NaTematStep implements Step {
     private List<Quote> parseArticleQuotes(Document doc) {
 
         List<Quote> quotes = new ArrayList<>();
-        getQuotes(doc,quotes,"blockquote",".author-about .name");
-        getQuotes(doc,quotes,".EmbeddedTweet-tweet",".TweetAuthor-name");
+        getQuotes(doc, quotes, "blockquote", ".author-about .name");
+        getQuotes(doc, quotes, ".EmbeddedTweet-tweet", ".TweetAuthor-name");
         return quotes;
     }
 
 
-    private void getQuotes(Document doc, List<Quote> quotes,String blockSelector,String authorSelector) {
+    private void getQuotes(Document doc, List<Quote> quotes, String blockSelector, String authorSelector) {
         doc.select(".art__body").first().select(blockSelector).forEach(s -> {
             Quote quote = new Quote();
             Element author = s.select(authorSelector).first();
@@ -201,6 +198,7 @@ public class NaTematStep implements Step {
 
         });
     }
+
     private void removeFootNotes(Document doc) {
         doc.select(".art__body__photo").remove();
         doc.select("em").remove();
