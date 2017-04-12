@@ -1,14 +1,12 @@
 package pl.pwr.edu.parser.feed;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import pl.pwr.edu.parser.connector.DocumentReader;
 import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.model.Article;
 import pl.pwr.edu.parser.model.PrawicaArticle;
-import pl.pwr.edu.parser.xml.XmlWriter;
+import pl.pwr.edu.parser.util.JsoupConnector;
+import pl.pwr.edu.parser.util.xml.XMLWriter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,6 +16,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static pl.pwr.edu.parser.util.JsoupConnector.connect;
 
 public class PrawicaStep implements Step {
 
@@ -40,36 +40,31 @@ public class PrawicaStep implements Step {
         links.parallelStream()
                 .map(this::parseLink)
                 .filter(a -> a != null)
-                .peek(a -> XmlWriter.writeArticleToFile(dir, a))
+                .peek(a -> XMLWriter.writeArticleToFile(dir, a))
                 .peek(a -> loadingBar.indicateHorizontalLoading(parsedArticles))
                 .count();
         return new ArrayList<>();
     }
 
     private List<String> getArticlesLinks() {
-        List<String> links = Lists.newArrayList();
-        try {
-            Document doc = Jsoup.connect(BASE_URL).get();
-            int pages = numberOfPages(doc);
-            LoadingBar loadingBar = new LoadingBar();
-            loadingBar.createVerticalLoadingBar(pages);
-            return IntStream.range(0, pages)
-                    .parallel()
-                    .mapToObj(i -> getArticlesLinks(BASE_URL + "/?page=" + i))
-                    .peek(a -> loadingBar.indicateVerticalLoading())
-                    .flatMap(List::stream).collect(Collectors.toList());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Document doc = connect(BASE_URL, SLEEP_TIME);
+        int pages = numberOfPages(doc);
 
-        return links;
+        LoadingBar loadingBar = new LoadingBar();
+        loadingBar.createVerticalLoadingBar(pages);
+
+        return IntStream.range(0, pages)
+                .parallel()
+                .mapToObj(i -> getArticlesLinks(BASE_URL + "/?page=" + i))
+                .peek(a -> loadingBar.indicateVerticalLoading())
+                .flatMap(List::stream).collect(Collectors.toList());
     }
 
     private List<String> getArticlesLinks(String url) {
         if (!url.contains(BASE_URL)) {
             url = BASE_URL + url;
         }
-        Document doc = DocumentReader.getDocument(url, MAX_CONNECTION, SLEEP_TIME);
+        Document doc = JsoupConnector.connect(url, SLEEP_TIME);
         if (doc == null)
             return new ArrayList<>();
         else
@@ -87,7 +82,7 @@ public class PrawicaStep implements Step {
         Article article = new PrawicaArticle();
         try {
 
-            Document doc = DocumentReader.getDocument(BASE_URL + articleUrl, MAX_CONNECTION, SLEEP_TIME);
+            Document doc = JsoupConnector.connect(BASE_URL + articleUrl, SLEEP_TIME);
             article.setTitle(doc.select("#page-title").first().text().trim());
             parseArticleMetaData(article, doc);
             if (article.getMetadata() == null)
@@ -107,7 +102,7 @@ public class PrawicaStep implements Step {
         }
         metaData.put("author", doc.select(".username").text().trim());
         metaData.put("date", getDate(doc.select(".submitted-by").first().text()));
-        metaData.put("keywords", doc.select("meta[name=keywords]").attr("content").trim().replace("| prawica.net",""));
+        metaData.put("keywords", doc.select("meta[name=keywords]").attr("content").trim().replace("| prawica.net", ""));
         metaData.put("description", doc.select("meta[name=description]").attr("content").trim());
         article.setMetadata(metaData);
     }

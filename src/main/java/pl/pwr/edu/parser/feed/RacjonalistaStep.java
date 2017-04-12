@@ -11,12 +11,11 @@ import org.jsoup.select.Elements;
 import pl.pwr.edu.parser.model.Article;
 import pl.pwr.edu.parser.model.Quote;
 import pl.pwr.edu.parser.model.RacjonalistaArticle;
+import pl.pwr.edu.parser.util.JsoupConnector;
+import pl.pwr.edu.parser.util.xml.XMLWriter;
 
-import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -25,19 +24,20 @@ public class RacjonalistaStep implements Step {
     private final static String baseUrl = "http://www.racjonalista.pl";
     private final static String articleListUrl = "http://www.racjonalista.pl/index.php/s,27";
     private final static Pattern FOOTNOTE_PATTERN = Pattern.compile("\\[\\s*(\\d+)\\s*]");
-    private static Random rand = new Random();
+    private final static int SLEEP_TIME = 3500;
 
     @Override
     public List<Article> parse() {
-        List<Article> articles = new ArrayList<>();
+        List<String> links = getArticlesLinks();
 
-        getArticlesLinks().forEach(link -> articles.add(parseLink(link)));
-
-        return articles;
+        return links.parallelStream()
+                .map(this::parseLink)
+                .peek(a -> XMLWriter.writeArticleToFile(System.getProperty("user.home") + "\\Desktop\\Racjonalista\\", a))
+                .collect(Collectors.toList());
     }
 
     private List<String> getArticlesLinks() {
-        Document doc = connect(articleListUrl);
+        Document doc = JsoupConnector.connect(articleListUrl, SLEEP_TIME);
 
         return doc.select("#oTxt").first()
                 .select(".linkart")
@@ -49,19 +49,12 @@ public class RacjonalistaStep implements Step {
 
     private Article parseLink(String articleUrl) {
         RacjonalistaArticle article = new RacjonalistaArticle();
-        Document doc = connect(baseUrl + articleUrl);
+        Document doc = JsoupConnector.connect(baseUrl + articleUrl, SLEEP_TIME);
 
         article.setTitle(doc.select("meta[property=og:title]").attr("content"));
         parseArticleMetaData(article, doc);
 
         article.setBody(joinArticlePages(article, doc));
-
-//        File dir = new File(System.getProperty("user.home")
-//                + "\\Desktop\\Racjonalista\\");
-//        dir.mkdir();
-//        JAXB.marshal(article,
-//                dir.getAbsolutePath() + "\\" + article.hashCode() + ".xml");
-
         return article;
     }
 
@@ -209,26 +202,8 @@ public class RacjonalistaStep implements Step {
         Element nextPageButton = doc.select(".pg").last();
         if (nextPageButton != null && nextPageButton.childNode(0) instanceof TextNode) {
             String nextPageLink = nextPageButton.attr("href");
-            doc = connect(baseUrl + nextPageLink);
+            doc = JsoupConnector.connect(baseUrl + nextPageLink, SLEEP_TIME);
             parseArticleBody(doc, pages, quotes);
-        }
-    }
-
-    private static Document connect(String url) {
-        try {
-            return Jsoup.connect(url).userAgent("Mozilla/5.0").get();
-        } catch (IOException e) {
-            sleepThread();
-            return connect(url);
-        }
-    }
-
-    private static void sleepThread() {
-        try {
-            Thread.sleep(rand.nextInt(500) + 3500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            Thread.currentThread().interrupt();
         }
     }
 }

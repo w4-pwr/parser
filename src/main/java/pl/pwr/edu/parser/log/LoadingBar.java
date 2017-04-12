@@ -8,7 +8,7 @@ import java.util.stream.IntStream;
 public class LoadingBar {
     private static final String VERTICAL_SIGN = "_";
     private int horizontalMaxNumber;
-    private int accuracy =1;
+    private int accuracy = 1;
 
     public void createVerticalLoadingBar(int number) {
         System.out.println("\nNumber to load : " + number + " \n start loading :");
@@ -22,8 +22,8 @@ public class LoadingBar {
 
 
     public void indicateHorizontalLoading(int number) {
-        if(number%accuracy==0)
-            System.out.println(number+"/"+horizontalMaxNumber);
+        if (number % accuracy == 0)
+            System.out.println(number + "/" + horizontalMaxNumber);
     }
 
     public void setHorizontalMaxNumber(int horizontalMaxNumber) {

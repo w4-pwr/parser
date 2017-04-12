@@ -4,12 +4,12 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import pl.pwr.edu.parser.connector.DocumentReader;
 import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.model.Article;
 import pl.pwr.edu.parser.model.NaTematArticle;
 import pl.pwr.edu.parser.model.Quote;
-import pl.pwr.edu.parser.xml.XmlWriter;
+import pl.pwr.edu.parser.util.JsoupConnector;
+import pl.pwr.edu.parser.util.xml.XMLWriter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -43,7 +43,7 @@ public class NaTematStep implements Step {
         parsedArticles++;
         if (article != null) {
             //articles.add(article);
-            XmlWriter.writeArticleToFile(dir, article);
+            XMLWriter.writeArticleToFile(dir, article);
         }
     }
 
@@ -57,7 +57,7 @@ public class NaTematStep implements Step {
                     .select("a")
                     .stream()
                     .map(link -> link.attr("href"))
-                    .filter(link -> isFromYear(link))
+                    .filter(this::isFromYear)
                     .collect(Collectors.toList()));
         } catch (IOException e) {
             e.printStackTrace();
@@ -73,7 +73,7 @@ public class NaTematStep implements Step {
         loadingBar.createVerticalLoadingBar(subcategoriesLinks.size());
 
         List<String> links = subcategoriesLinks.parallelStream().
-                map(s -> getArticlesForSubcategory(s))
+                map(this::getArticlesForSubcategory)
                 .peek(s -> loadingBar.indicateVerticalLoading())
                 .flatMap(List::stream).collect(Collectors.toList());
 
@@ -103,7 +103,7 @@ public class NaTematStep implements Step {
     private Article parseLink(String articleUrl) {
         Article article = new NaTematArticle();
 
-        Document doc = DocumentReader.getDocument(articleUrl, MAX_CONNECTION, SLEEP_TIME);
+        Document doc = JsoupConnector.connect(articleUrl, SLEEP_TIME);
 
         Elements titleElement = doc.select(".art__title");
         if (doc == null || titleElement == null || titleElement.isEmpty())
