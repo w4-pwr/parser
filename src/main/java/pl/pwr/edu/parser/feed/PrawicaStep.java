@@ -14,9 +14,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static java.util.stream.Collectors.toList;
 import static pl.pwr.edu.parser.util.JsoupConnector.connect;
 
 public class PrawicaStep implements Step {
@@ -57,7 +57,8 @@ public class PrawicaStep implements Step {
                 .parallel()
                 .mapToObj(i -> getArticlesLinks(BASE_URL + "/?page=" + i))
                 .peek(a -> loadingBar.indicateVerticalLoading())
-                .flatMap(List::stream).collect(Collectors.toList());
+                .flatMap(List::stream)
+                .collect(toList());
     }
 
     private List<String> getArticlesLinks(String url) {
@@ -72,16 +73,13 @@ public class PrawicaStep implements Step {
                     .select("article")
                     .stream()
                     .map(link -> link.select("a").first().attr("href"))
-                    .collect(Collectors.toList());
-
-
+                    .collect(toList());
     }
 
     private Article parseLink(String articleUrl) {
         parsedArticles++;
         Article article = new PrawicaArticle();
         try {
-
             Document doc = JsoupConnector.connect(BASE_URL + articleUrl, SLEEP_TIME);
             article.setTitle(doc.select("#page-title").first().text().trim());
             parseArticleMetaData(article, doc);

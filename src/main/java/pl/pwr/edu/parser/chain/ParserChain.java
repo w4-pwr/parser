@@ -23,9 +23,23 @@ public class ParserChain {
     }
 
     public void fire() {
-        articles = parsingSteps.parallelStream().map(Step::parse).flatMap(List::stream).collect(Collectors.toList());
+        articles = parsingSteps
+                .parallelStream()
+                .map(Step::parse)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
     }
 
+    public static void main(String[] args) {
+        try {
+            List a = new ArrayList<>();
+//            a.get(1/);
+        }catch (IndexOutOfBoundsException e){
+            e.printStackTrace();
+        }finally {
+            System.out.println("finally");
+        }
+    }
     public List<Article> getArticles() {
         return articles;
     }

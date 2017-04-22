@@ -52,6 +52,14 @@ public abstract class Article {
         return this;
     }
 
+    public void setSource(URL source) {
+        this.source = source;
+    }
+
+    public URL getSource() {
+        return source;
+    }
+
     @Override
     public String toString() {
         return "Article{" +
