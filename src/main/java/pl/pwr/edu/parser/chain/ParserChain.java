@@ -1,8 +1,6 @@
 package pl.pwr.edu.parser.chain;
 
-import pl.pwr.edu.parser.feed.NaTematStep;
-import pl.pwr.edu.parser.feed.PrawicaStep;
-import pl.pwr.edu.parser.feed.RacjonalistaStep;
+import pl.pwr.edu.parser.feed.MoneyStep;
 import pl.pwr.edu.parser.feed.Step;
 import pl.pwr.edu.parser.model.Article;
 
@@ -18,9 +16,10 @@ public class ParserChain {
     public ParserChain() {
         articles = new ArrayList<>();
         parsingSteps = new ArrayList<>();
-        parsingSteps.add(new NaTematStep());
-        parsingSteps.add(new RacjonalistaStep());
-        parsingSteps.add(new PrawicaStep());
+//        parsingSteps.add(new NaTematStep());
+//        parsingSteps.add(new RacjonalistaStep());
+//        parsingSteps.add(new PrawicaStep());
+        parsingSteps.add(new MoneyStep());
     }
 
     public void fire() {
