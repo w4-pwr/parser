@@ -1,46 +1,36 @@
 package pl.pwr.edu.parser.chain;
 
-import pl.pwr.edu.parser.feed.MoneyStep;
-import pl.pwr.edu.parser.feed.Step;
-import pl.pwr.edu.parser.model.Article;
-
-import java.util.ArrayList;
+import com.google.common.collect.Lists;
 import java.util.List;
-import java.util.stream.Collectors;
+import pl.pwr.edu.parser.feed.FocusStep;
+import pl.pwr.edu.parser.feed.MoneyStep;
+import pl.pwr.edu.parser.feed.NaTematStep;
+import pl.pwr.edu.parser.feed.PrawicaStep;
+import pl.pwr.edu.parser.feed.PurePcStep;
+import pl.pwr.edu.parser.feed.RacjonalistaStep;
+import pl.pwr.edu.parser.feed.Step;
 
 public class ParserChain {
 
-    private List<Step> parsingSteps;
-    private List<Article> articles;
+  private List<Step> parsingSteps;
 
-    public ParserChain() {
-        articles = new ArrayList<>();
-        parsingSteps = new ArrayList<>();
-//        parsingSteps.add(new NaTematStep());
-//        parsingSteps.add(new RacjonalistaStep());
-//        parsingSteps.add(new PrawicaStep());
-        parsingSteps.add(new MoneyStep());
-    }
+  public ParserChain() {
+    parsingSteps = Lists
+        .newArrayList(
+            new NaTematStep(),
+            new RacjonalistaStep(),
+            new PrawicaStep(),
+            new MoneyStep(),
+            new FocusStep(),
+            new PurePcStep());
+  }
 
-    public void fire() {
-        articles = parsingSteps
-                .parallelStream()
-                .map(Step::parse)
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
-    }
+  public static void main(String[] args) {
+    ParserChain parserChain = new ParserChain();
+    parserChain.fire();
+  }
 
-    public static void main(String[] args) {
-        try {
-            List a = new ArrayList<>();
-//            a.get(1/);
-        }catch (IndexOutOfBoundsException e){
-            e.printStackTrace();
-        }finally {
-            System.out.println("finally");
-        }
-    }
-    public List<Article> getArticles() {
-        return articles;
-    }
+  public void fire() {
+    parsingSteps.forEach(Step::parse);
+  }
 }
