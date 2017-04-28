@@ -4,7 +4,6 @@ import com.google.common.collect.Maps;
 import org.jsoup.nodes.Document;
 import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.model.Article;
-import pl.pwr.edu.parser.model.PrawicaArticle;
 import pl.pwr.edu.parser.util.JsoupConnector;
 import pl.pwr.edu.parser.util.xml.XMLWriter;
 
@@ -78,7 +77,7 @@ public class PrawicaStep implements Step {
 
     private Article parseLink(String articleUrl) {
         parsedArticles++;
-        Article article = new PrawicaArticle();
+        Article article = new Article(articleUrl);
         try {
             Document doc = JsoupConnector.connect(BASE_URL + articleUrl, SLEEP_TIME);
             article.setTitle(doc.select("#page-title").first().text().trim());

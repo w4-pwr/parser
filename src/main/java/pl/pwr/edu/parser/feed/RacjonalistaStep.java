@@ -10,7 +10,6 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import pl.pwr.edu.parser.model.Article;
 import pl.pwr.edu.parser.model.Quote;
-import pl.pwr.edu.parser.model.RacjonalistaArticle;
 import pl.pwr.edu.parser.util.JsoupConnector;
 import pl.pwr.edu.parser.util.xml.XMLWriter;
 
@@ -48,7 +47,7 @@ public class RacjonalistaStep implements Step {
     }
 
     private Article parseLink(String articleUrl) {
-        RacjonalistaArticle article = new RacjonalistaArticle();
+        Article article = new Article(articleUrl);
         Document doc = JsoupConnector.connect(baseUrl + articleUrl, SLEEP_TIME);
 
         article.setTitle(doc.select("meta[property=og:title]").attr("content"));
@@ -58,7 +57,7 @@ public class RacjonalistaStep implements Step {
         return article;
     }
 
-    private void parseArticleMetaData(RacjonalistaArticle article, Document doc) {
+    private void parseArticleMetaData(Article article, Document doc) {
         Element category = doc.select(".linkdzial").last();
         article.getMetadata().put("author", doc.select("a[rel=author]").text().trim());
         article.getMetadata().put("category", category.getElementsByTag("b").text().trim());
@@ -67,8 +66,9 @@ public class RacjonalistaStep implements Step {
         article.getMetadata().put("description", doc.select("meta[name=description]").attr("content").trim());
     }
 
-    private String joinArticlePages(RacjonalistaArticle article, Document doc) {
-        return String.join("\n", parseArticleBody(doc, null, article.getQuotes()));
+    private String joinArticlePages(Article article, Document doc) {
+        return String.join("\n", parseArticleBody(doc, null, article.getQuotes()))
+                .replaceAll("https?://\\S+\\s?", "");
     }
 
     private List<String> parseArticleBody(Document doc, List<String> pages, List<Quote> quotes) {

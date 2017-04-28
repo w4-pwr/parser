@@ -6,7 +6,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.model.Article;
-import pl.pwr.edu.parser.model.NaTematArticle;
 import pl.pwr.edu.parser.model.Quote;
 import pl.pwr.edu.parser.util.JsoupConnector;
 import pl.pwr.edu.parser.util.xml.XMLWriter;
@@ -101,7 +100,7 @@ public class NaTematStep implements Step {
     }
 
     private Article parseLink(String articleUrl) {
-        Article article = new NaTematArticle();
+        Article article = new Article(articleUrl);
 
         Document doc = JsoupConnector.connect(articleUrl, SLEEP_TIME);
 

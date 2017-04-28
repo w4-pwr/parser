@@ -4,7 +4,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import pl.pwr.edu.parser.model.Article;
-import pl.pwr.edu.parser.model.MoneyArticle;
 import pl.pwr.edu.parser.util.xml.XMLWriter;
 
 import java.io.IOException;
@@ -48,9 +47,8 @@ public class MoneyStep implements Step {
     }
 
     private Article parseArticle(String articleUrl) throws IOException {
-        Article article = new MoneyArticle();
+        Article article = new Article(articleUrl);
         Document doc = Jsoup.connect(articleUrl).get();
-        article.setSource(new URL(articleUrl));
         article.setTitle(parseTitle(doc));
         article.setMetadata(parseMetaData(doc));
         article.setBody(parseBody(doc));

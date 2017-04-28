@@ -1,18 +1,17 @@
 package pl.pwr.edu.parser.model;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public abstract class Article {
-    private URL source;
+public class Article {
+    private String source;
     private String title;
     private String body;
     private HashMap<String, String> metadata = new HashMap<>();
     private List<Quote> quotes = new ArrayList<>();
 
-    public Article(URL url) {
+    public Article(String url) {
         this.source = url;
     }
 
@@ -52,12 +51,13 @@ public abstract class Article {
         return this;
     }
 
-    public void setSource(URL source) {
-        this.source = source;
+    public String getSource() {
+        return source;
     }
 
-    public URL getSource() {
-        return source;
+    public Article setSource(String source) {
+        this.source = source;
+        return this;
     }
 
     @Override
