@@ -8,6 +8,7 @@ import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.model.Article;
 import pl.pwr.edu.parser.model.Quote;
 import pl.pwr.edu.parser.util.JsoupConnector;
+import pl.pwr.edu.parser.util.xml.CMDIWriter;
 import pl.pwr.edu.parser.util.xml.XMLWriter;
 
 import java.io.IOException;
@@ -42,7 +43,8 @@ public class NaTematStep implements Step {
         parsedArticles++;
         if (article != null) {
             //articles.add(article);
-            XMLWriter.writeArticleToFile(dir, article);
+            XMLWriter.writeArticleToFile(article, dir);
+            CMDIWriter.writeArticleToFile(article, dir);
         }
     }
 

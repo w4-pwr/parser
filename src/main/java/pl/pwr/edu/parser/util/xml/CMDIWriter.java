@@ -4,6 +4,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import pl.pwr.edu.parser.model.Article;
+import pl.pwr.edu.parser.util.FileHelper;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -14,63 +15,71 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 
 public class CMDIWriter {
 
-    public static void writeArticleToFile(String path, Article article)
-            throws ParserConfigurationException, TransformerException {
+    public static void writeArticleToFile(Article article, String path) {
 
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = dbf.newDocumentBuilder();
-        Document doc = builder.newDocument();
+        try {
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = dbf.newDocumentBuilder();
+            Document doc = builder.newDocument();
 
-        Element root = doc.createElement("ResourceBasicInformation");
-        doc.appendChild(root);
-        root.setAttribute("xmlns", "http://www.clarin.eu/cmd/");
-        root.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-        root.setAttribute("CMDVersion", "1.1");
-        root.setAttribute("xsi:schemaLocation", "http://www.clarin.eu/cmd/ ResourceBasicInformation.xsd ");
+            Element root = doc.createElement("ResourceBasicInformation");
+            doc.appendChild(root);
+            root.setAttribute("xmlns", "http://www.clarin.eu/cmd/");
+            root.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+            root.setAttribute("CMDVersion", "1.1");
+            root.setAttribute("xsi:schemaLocation", "http://www.clarin.eu/cmd/ ResourceBasicInformation.xsd ");
 
 
-        Element bibliography = doc.createElement("TextBibliographic");
-        root.appendChild(bibliography);
+            Element bibliography = doc.createElement("TextBibliographic");
+            root.appendChild(bibliography);
 
-        createChildTextNode(doc, bibliography, "Title", article.getTitle(), null);
-        createChildTextNode(doc, bibliography, "PublicationDate", article.getMetadata().get("date"), null);
-        createChildTextNode(doc, bibliography, "PublicationPlace", "unknown", null);
+            createChildTextNode(doc, bibliography, "Title", article.getTitle(), null);
+            createChildTextNode(doc, bibliography, "PublicationDate", article.getMetadata().get("date"), null);
+            createChildTextNode(doc, bibliography, "PublicationPlace", "unknown", null);
 
-        Element authors = doc.createElement("Authors");
-        bibliography.appendChild(authors);
+            Element authors = doc.createElement("Authors");
+            bibliography.appendChild(authors);
 
-        Arrays.asList(
-                article.getMetadata()
-                        .get("author")
-                        .split(",")
-        ).forEach(author -> createAuthorNode(doc, authors, author));
+            Arrays.asList(
+                    article.getMetadata()
+                            .get("author")
+                            .split(",")
+            ).forEach(author -> createAuthorNode(doc, authors, author));
 
-        Element recourceContent = doc.createElement("ResourceContent");
-        root.appendChild(recourceContent);
+            Element recourceContent = doc.createElement("ResourceContent");
+            root.appendChild(recourceContent);
 
-        createChildTextNode(doc, recourceContent, "Subject", article.getMetadata().get("category"), "pol");
-        createChildTextNode(doc, recourceContent, "originalSource", article.getSource(), "und");
+            createChildTextNode(doc, recourceContent, "Subject", article.getMetadata().get("category"), "pol");
+            createChildTextNode(doc, recourceContent, "originalSource", article.getSource(), "und");
 
-        Arrays.asList(
-                article.getMetadata()
-                        .get("keywords")
-                        .split(",")
-        ).forEach(keyword -> createChildTextNode(doc, recourceContent, "keyword", keyword, "pol"));
+            Arrays.stream(
+                    article.getMetadata()
+                            .get("keywords")
+                            .split(","))
+                    .map(String::trim)
+                    .filter(k -> !k.isEmpty())
+                    .forEach(k -> createChildTextNode(doc, recourceContent, "keyword", k, "pol"));
 
-        Element descriptions = doc.createElement("Descriptions");
-        recourceContent.appendChild(descriptions);
+            Element descriptions = doc.createElement("Descriptions");
+            recourceContent.appendChild(descriptions);
 
-        Element description = createChildTextNode(doc, descriptions, "Description",
-                article.getMetadata().get("description"), "pol");
-        description.setAttribute("type", "short");
+            Element description = createChildTextNode(doc, descriptions, "Description",
+                    article.getMetadata().get("description"), "pol");
+            description.setAttribute("type", "short");
 
-        prettyPrint(doc);
+            prettyPrint(path, doc, article);
+        } catch (ParserConfigurationException | TransformerException | IOException e) {
+            throw new RuntimeException("CMDI");
+        }
     }
 
     private static Element createChildTextNode(Document doc, Node parent, String nodeName, String content, String lang) {
@@ -92,12 +101,16 @@ public class CMDIWriter {
         return author;
     }
 
-    private static void prettyPrint(Document xml) throws TransformerException {
+    private static void prettyPrint(String path, Document xml, Article article) throws TransformerException, IOException {
         Transformer tf = TransformerFactory.newInstance().newTransformer();
         tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         tf.setOutputProperty(OutputKeys.INDENT, "yes");
-        Writer out = new StringWriter();
-        tf.transform(new DOMSource(xml), new StreamResult(out));
+
+        FileWriter fw = new FileWriter(FileHelper.createArticleFile(article, path, "cmdi"));
+        tf.transform(new DOMSource(xml), new StreamResult(fw));
+
+        File articleBody = FileHelper.createArticleFile(article, path, null);
+        Files.write(articleBody.toPath(), article.getBody().getBytes(), StandardOpenOption.CREATE);
     }
 
 }

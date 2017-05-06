@@ -11,6 +11,7 @@ import org.jsoup.select.Elements;
 import pl.pwr.edu.parser.model.Article;
 import pl.pwr.edu.parser.model.Quote;
 import pl.pwr.edu.parser.util.JsoupConnector;
+import pl.pwr.edu.parser.util.xml.CMDIWriter;
 import pl.pwr.edu.parser.util.xml.XMLWriter;
 
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 public class RacjonalistaStep implements Step {
     private final static String baseUrl = "http://www.racjonalista.pl";
     private final static String articleListUrl = "http://www.racjonalista.pl/index.php/s,27";
+    private final static String dir = System.getProperty("user.home") + "\\Desktop\\Racjonalista\\";
     private final static Pattern FOOTNOTE_PATTERN = Pattern.compile("\\[\\s*(\\d+)\\s*]");
     private final static int SLEEP_TIME = 3500;
 
@@ -29,9 +31,10 @@ public class RacjonalistaStep implements Step {
     public List<Article> parse() {
         List<String> links = getArticlesLinks();
 
-        return links.parallelStream()
+        return links.stream()
                 .map(this::parseLink)
-                .peek(a -> XMLWriter.writeArticleToFile(System.getProperty("user.home") + "\\Desktop\\Racjonalista\\", a))
+                .peek(a -> XMLWriter.writeArticleToFile(a, dir))
+                .peek(a -> CMDIWriter.writeArticleToFile(a, dir))
                 .collect(Collectors.toList());
     }
 
@@ -47,8 +50,8 @@ public class RacjonalistaStep implements Step {
     }
 
     private Article parseLink(String articleUrl) {
-        Article article = new Article(articleUrl);
-        Document doc = JsoupConnector.connect(baseUrl + articleUrl, SLEEP_TIME);
+        Article article = new Article(baseUrl + articleUrl);
+        Document doc = JsoupConnector.connect(article.getSource(), SLEEP_TIME);
 
         article.setTitle(doc.select("meta[property=og:title]").attr("content"));
         parseArticleMetaData(article, doc);

@@ -5,6 +5,7 @@ import org.jsoup.nodes.Document;
 import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.model.Article;
 import pl.pwr.edu.parser.util.JsoupConnector;
+import pl.pwr.edu.parser.util.xml.CMDIWriter;
 import pl.pwr.edu.parser.util.xml.XMLWriter;
 
 import java.io.IOException;
@@ -39,7 +40,8 @@ public class PrawicaStep implements Step {
         links.parallelStream()
                 .map(this::parseLink)
                 .filter(a -> a != null)
-                .peek(a -> XMLWriter.writeArticleToFile(dir, a))
+                .peek(a -> XMLWriter.writeArticleToFile(a, dir))
+                .peek(a -> CMDIWriter.writeArticleToFile(a, dir))
                 .peek(a -> loadingBar.indicateHorizontalLoading(parsedArticles))
                 .count();
         return new ArrayList<>();

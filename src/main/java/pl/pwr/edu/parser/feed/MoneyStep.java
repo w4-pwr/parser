@@ -4,6 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import pl.pwr.edu.parser.model.Article;
+import pl.pwr.edu.parser.util.xml.CMDIWriter;
 import pl.pwr.edu.parser.util.xml.XMLWriter;
 
 import java.io.IOException;
@@ -36,7 +37,8 @@ public class MoneyStep implements Step {
         try {
             Article article = parseArticle(articleUrl);
             System.out.println(article);
-            XMLWriter.writeArticleToFile(dir, article);
+            XMLWriter.writeArticleToFile(article, dir);
+            CMDIWriter.writeArticleToFile(article, dir);
             return Optional.of(article);
         } catch (IOException e) {
             e.printStackTrace();
