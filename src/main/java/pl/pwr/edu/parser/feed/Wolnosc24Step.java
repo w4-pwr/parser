@@ -42,11 +42,11 @@ public class Wolnosc24Step implements Step {
         return newArrayList();
     }
 
-    void parse(Article article)
-    {
+    void parse(Article article) {
 //        try {
 //        System.out.println(article.getTitle());
-        XMLWriter.writeArticleToFile(dir, article);
+        XMLWriter.writeArticleToFile(article, dir);
+        CMDIWriter.writeArticleToFile(article, dir);
         parsedArticles++;
 //            CMDIWriter.writeArticleToFile(dir, articles.get(0));
 //        } catch (IOException e) {
@@ -118,14 +118,14 @@ public class Wolnosc24Step implements Step {
         String url = baseUrl + year + "/page/";
 
         try {
-            Document doc = Jsoup.connect(baseUrl+year).get();
+            Document doc = Jsoup.connect(baseUrl + year).get();
             String pagesStr = doc.getElementsByClass("page-nav")
                     .select("a[class='last']")
                     .attr("title")
                     .toString();
             int pages = Integer.parseInt(pagesStr);
             System.out.println("Pages: " + pages);
-            for(int i = 1; i <= pages; ++i)
+            for (int i = 1; i <= pages; ++i)
                 links.addAll(getArticlesLinkFromPage(url, i));
 
         } catch (IOException e) {
