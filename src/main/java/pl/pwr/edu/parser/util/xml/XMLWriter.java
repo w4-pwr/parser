@@ -15,4 +15,13 @@ public class XMLWriter {
 
         JAXB.marshal(article, xml);
     }
+    public static void writeArticleToFileLinux(String directory, Article article) {
+        String author = article.getMetadata().get("author");
+        String dirName = isNullOrEmpty(author) ? "Uncategorized" : author;
+
+        File dir = new File(directory + dirName);
+        dir.mkdirs();
+        JAXB.marshal(article,
+                dir.getAbsolutePath() + "/" + article.hashCode() + ".xml");
+    }
 }
