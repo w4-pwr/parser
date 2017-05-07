@@ -1,11 +1,11 @@
 package pl.pwr.edu.parser.util.xml;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import pl.pwr.edu.parser.model.Article;
-import pl.pwr.edu.parser.util.FileHelper;
-
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -15,12 +15,11 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
-import java.util.Arrays;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import pl.pwr.edu.parser.model.Article;
+import pl.pwr.edu.parser.util.FileHelper;
 
 public class CMDIWriter {
 
@@ -51,7 +50,7 @@ public class CMDIWriter {
 
             Arrays.asList(
                     article.getMetadata()
-                            .get("author")
+                        .getOrDefault("author", "")
                             .split(",")
             ).forEach(author -> createAuthorNode(doc, authors, author));
 
@@ -63,7 +62,7 @@ public class CMDIWriter {
 
             Arrays.stream(
                     article.getMetadata()
-                            .get("keywords")
+                        .getOrDefault("keywords", "")
                             .split(","))
                     .map(String::trim)
                     .filter(k -> !k.isEmpty())
