@@ -2,6 +2,12 @@ package pl.pwr.edu.parser.feed;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -9,151 +15,155 @@ import org.jsoup.select.Elements;
 import pl.pwr.edu.parser.model.Article;
 import pl.pwr.edu.parser.util.SchemaUtils;
 import pl.pwr.edu.parser.util.TagUtils;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toList;
+import pl.pwr.edu.parser.util.xml.CMDIWriter;
+import pl.pwr.edu.parser.util.xml.XMLWriter;
 
 /**
- * Created by evelan on 19/04/2017.
+ * Created by Jakub Pomykała on 19/04/2017.
  */
 public class PurePcStep implements Step {
 
-    private static final String BASE_URL = "https://www.purepc.pl";
+  private static final String BASE_URL = "https://www.purepc.pl";
+  private static String dir = System.getProperty("user.home") + "/Desktop/PurePc/";
 
-    @Override
-    public List<Article> parse() {
-        int page = 0;
-        return getPageArticles(page);
-    }
 
-    private List<Article> getPageArticles(int page) {
-        String articlePageUrl = getArticlePageUrl(page);
-        List<String> allArticleUrls = getAllArticleUrlsFromUrl(articlePageUrl);
-        return allArticleUrls
-                .stream()
-                .map(this::getArticle)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(toList());
-    }
+  @Override
+  public List<Article> parse() {
+    int page = 0;
+    return getPageArticles(page);
+  }
 
-    private String getArticlePageUrl(int page) {
-        return BASE_URL + "/artykuly?page=" + page;
-    }
+  private List<Article> getPageArticles(int page) {
+    String articlePageUrl = getArticlePageUrl(page);
+    List<String> allArticleUrls = getAllArticleUrlsFromUrl(articlePageUrl);
+    allArticleUrls
+        .stream()
+        .map(this::getArticle)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .forEach(this::writeToFile);
 
-    private List<String> getAllArticleUrlsFromUrl(String url) {
-        try {
-            Document document = Jsoup.connect(url).get();
-            return extractAllArticleLinks(document);
-        } catch (IOException e) {
-            System.err.printf("Cannot fetch article urls, " + e.getMessage());
-            e.printStackTrace();
-            return Collections.emptyList();
-        }
-    }
+    return Lists.newArrayList();
+  }
 
-    private List<String> extractAllArticleLinks(Document document) {
-        Elements articleElements = document.getElementsByClass("nl_item");
-        return articleElements
-                .stream()
-                .map(this::extractArticleUrl)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toList());
-    }
+  private void writeToFile(Article article) {
+    XMLWriter.writeArticleToFile(article, dir);
+    CMDIWriter.writeArticleToFile(article, dir);
+  }
 
-    private Optional<String> extractArticleUrl(Element articleElement) {
-        Elements linkElement = articleElement.getElementsByTag("a");
-        return Optional
-                .ofNullable(linkElement.first())
-                .map(element -> element.attr("href"))
-                .map(link -> BASE_URL + link);
-    }
+  private String getArticlePageUrl(int page) {
+    return BASE_URL + "/artykuly?page=" + page;
+  }
 
-    private Optional<Article> getArticle(String articleUrl) {
-        try {
-            Document articleDocument = fetchArticleDocument(articleUrl);
-            Article article = extractArticle(articleDocument);
-            System.out.println(article);
-            return Optional.of(article);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (IllegalArgumentException iae) {
-            System.err.println("Cannot fetch article: " + articleUrl + " -> " + iae.getMessage());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return Optional.empty();
+  private List<String> getAllArticleUrlsFromUrl(String url) {
+    try {
+      Document document = Jsoup.connect(url).get();
+      return extractAllArticleLinks(document);
+    } catch (IOException e) {
+      System.err.printf("Cannot fetch article urls, " + e.getMessage());
+      e.printStackTrace();
+      return Collections.emptyList();
     }
+  }
 
-    private Document fetchArticleDocument(String articleUrl) throws IOException {
-        return Jsoup.connect(articleUrl).get();
-    }
+  private List<String> extractAllArticleLinks(Document document) {
+    Elements articleElements = document.getElementsByClass("nl_item");
+    return articleElements
+        .stream()
+        .map(this::extractArticleUrl)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .collect(Collectors.toList());
+  }
 
-    private Article extractArticle(Document articleDocument) throws IOException {
-        Article article = new Article(articleDocument.location());
-        article.setTitle(getTitle(articleDocument));
-        article.setBody(getBody(articleDocument));
-        article.setMetadata(getMetadata(articleDocument));
-        article.setQuotes(Lists.newArrayList());
-        return article;
-    }
+  private Optional<String> extractArticleUrl(Element articleElement) {
+    Elements linkElement = articleElement.getElementsByTag("a");
+    return Optional
+        .ofNullable(linkElement.first())
+        .map(element -> element.attr("href"))
+        .map(link -> BASE_URL + link);
+  }
 
-    private String getTitle(Document articleDocument) {
-        return SchemaUtils
-                .getItemPropValue("name", articleDocument)
-                .orElseThrow(() -> new IllegalArgumentException("Cannot parse title"));
+  private Optional<Article> getArticle(String articleUrl) {
+    try {
+      Document articleDocument = fetchArticleDocument(articleUrl);
+      Article article = extractArticle(articleDocument);
+      System.out.println(article);
+      return Optional.of(article);
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (IllegalArgumentException iae) {
+      System.err.println("Cannot fetch article: " + articleUrl + " -> " + iae.getMessage());
+    } catch (Exception e) {
+      e.printStackTrace();
     }
+    return Optional.empty();
+  }
 
-    private String getBody(Document articleDocument) {
-        return Optional
-                .ofNullable(articleDocument)
-                .map(document -> document.getElementsByClass("content"))
-                .map(Elements::first)
-                .map(document -> document.select(".PageMenuList").remove())
-                .map(Elements::text)
-                .orElseThrow(() -> new IllegalArgumentException("Cannot parse body text"));
-    }
+  private Document fetchArticleDocument(String articleUrl) throws IOException {
+    return Jsoup.connect(articleUrl).get();
+  }
 
-    private HashMap<String, String> getMetadata(Document articleDocument) {
-        HashMap<String, String> metaData = Maps.newHashMap();
-        metaData.put("author", getAuthor(articleDocument));
-        metaData.put("date", getDate(articleDocument));
-        metaData.put("tags", getTags(articleDocument));
-        metaData.put("category", getCategory(articleDocument));
-        return metaData;
-    }
+  private Article extractArticle(Document articleDocument) throws IOException {
+    Article article = new Article(articleDocument.location());
+    article.setTitle(getTitle(articleDocument));
+    article.setBody(getBody(articleDocument));
+    article.setMetadata(getMetadata(articleDocument));
+    article.setQuotes(Lists.newArrayList());
+    return article;
+  }
 
-    private String getAuthor(Document articleDocument) {
-        return SchemaUtils
-                .getItemPropValue("author", articleDocument)
-                .orElseThrow(() -> new IllegalArgumentException("Cannot parse author"));
-    }
+  private String getTitle(Document articleDocument) {
+    return SchemaUtils
+        .getItemPropValue("name", articleDocument)
+        .orElseThrow(() -> new IllegalArgumentException("Cannot parse title"));
+  }
 
-    private String getDate(Document articleDocument) {
-        return SchemaUtils
-                .getItemPropValue("datePublished", articleDocument)
-                .orElseThrow(() -> new IllegalArgumentException("Cannot parse date"));
-    }
+  private String getBody(Document articleDocument) {
+    return Optional
+        .ofNullable(articleDocument)
+        .map(document -> document.getElementsByClass("content clear-block"))
+        .map(Elements::first)
+        .map(Element::text)
+        .orElseThrow(() -> new IllegalArgumentException("Cannot parse body text"));
+  }
 
-    private String getTags(Document articleDocument) {
-        return SchemaUtils
-                .getMetaValue("name", "keywords", articleDocument)
-                .map(TagUtils::getTrimedAndCommaSeparatedTags)
-                .orElseThrow(() -> new IllegalArgumentException("Cannot parse tags"));
-    }
+  private HashMap<String, String> getMetadata(Document articleDocument) {
+    HashMap<String, String> metaData = Maps.newHashMap();
+    metaData.put("author", getAuthor(articleDocument));
+    metaData.put("date", getDate(articleDocument));
+    metaData.put("keywords", getKeywords(articleDocument));
+    metaData.put("category", getCategory(articleDocument));
+    return metaData;
+  }
 
-    private String getCategory(Document articleDocument) {
-        Elements categoryElements = articleDocument.getElementsByClass("bc_target");
-        return Optional
-                .ofNullable(categoryElements)
-                .map(Elements::text)
-                .orElseThrow(() -> new IllegalArgumentException("Cannot parse category"));
-    }
+  private String getAuthor(Document articleDocument) {
+    return SchemaUtils
+        .getItemPropValue("author", articleDocument)
+        .orElseThrow(() -> new IllegalArgumentException("Cannot parse author"));
+  }
+
+  private String getDate(Document articleDocument) {
+    return SchemaUtils
+        .getItemPropValue("datePublished", articleDocument)
+        .orElseThrow(() -> new IllegalArgumentException("Cannot parse date"));
+  }
+
+  private String getKeywords(Document articleDocument) {
+    return SchemaUtils
+        .getMetaValue("name", "keywords", articleDocument)
+        .map(TagUtils::getTrimedAndCommaSeparatedTags)
+        .map(String::toLowerCase)
+        .orElseThrow(() -> new IllegalArgumentException("Cannot parse tags"));
+  }
+
+  private String getCategory(Document articleDocument) {
+    Elements categoryElements = articleDocument.getElementsByClass("bc_target");
+    return Optional
+        .ofNullable(categoryElements)
+        .map(Elements::text)
+        .map(String::trim)
+        .map(String::toLowerCase)
+        .orElseThrow(() -> new IllegalArgumentException("Cannot parse category"));
+  }
 }
