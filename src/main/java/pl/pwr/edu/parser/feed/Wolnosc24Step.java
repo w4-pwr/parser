@@ -21,16 +21,13 @@ import static com.google.common.collect.Lists.newArrayList;
  */
 public class Wolnosc24Step implements Step {
     private static String baseUrl = "http://wolnosc24.pl/";
-    private static String dir = System.getProperty("user.home") + "\\Desktop\\Wolnosc24\\";
+    private static String dir = System.getProperty("user.home") + "/Desktop/Wolnosc24/";
     private int parsedArticles = 1;
 
     @Override
     public List<Article> parse() {
 
         List<String> allArticlesLinks = getArticlesLink();
-//        for(String str : allArticlesLinks)
-//            System.out.println(str);
-//        System.out.println(allArticlesLinks.size());
 
         System.out.println(baseUrl);
         LoadingBar loadingBar = new LoadingBar();
@@ -43,18 +40,13 @@ public class Wolnosc24Step implements Step {
     }
 
     void parse(Article article) {
-//        try {
-//        System.out.println(article.getTitle());
         XMLWriter.writeArticleToFile(article, dir);
         CMDIWriter.writeArticleToFile(article, dir);
         parsedArticles++;
-//            CMDIWriter.writeArticleToFile(dir, articles.get(0));
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-    }
 
-    private Article parseLink(String articleUrl) {
+
+    boolean parseLink(String articleUrl) {
+        if ( articleUrl.indexOf("wolnosc24") == -1 ) return false;
         Article article = new Article(articleUrl);
 
         try {
@@ -68,22 +60,21 @@ public class Wolnosc24Step implements Step {
 
             parseArticleMetaData(article, el);
             parseBody(article, el);
+            parse(article);
 
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         }
 
-        parse(article);
-        return article;
+        return true;
     }
 
     private void parseBody(Article article, Element el) {
         String text = el
                 .getElementsByTag("p")
                 .text();
-//        System.out.println(text);
-//        text = text.replaceAll("„(.*)”"," ");
-//        System.out.println(text);
+
         article.setBody(text);
     }
 
