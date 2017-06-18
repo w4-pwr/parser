@@ -1,5 +1,6 @@
 package pl.pwr.edu.parser.util;
 
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -15,6 +16,20 @@ public class JsoupConnector {
         } catch (IOException e) {
             sleepThread(sleepTime);
             return connect(url, sleepTime);
+        }
+    }
+    public static Document connectThrowable(String url, int sleepTime) throws Exception {
+        try {
+            return Jsoup.connect(url).userAgent("Mozilla/5.0").get();
+        } catch (HttpStatusException e) {
+            sleepThread(sleepTime);
+            if (e.getStatusCode() != 403) {
+                throw e;
+            }
+            return connectThrowable(url, sleepTime);
+        } catch (IOException e) {
+            sleepThread(sleepTime);
+            return connectThrowable(url, sleepTime);
         }
     }
 
