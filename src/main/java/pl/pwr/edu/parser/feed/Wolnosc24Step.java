@@ -43,7 +43,7 @@ public class Wolnosc24Step implements Step {
         XMLWriter.writeArticleToFile(article, dir);
         CMDIWriter.writeArticleToFile(article, dir);
         parsedArticles++;
-
+    }
 
     boolean parseLink(String articleUrl) {
         if ( articleUrl.indexOf("wolnosc24") == -1 ) return false;
