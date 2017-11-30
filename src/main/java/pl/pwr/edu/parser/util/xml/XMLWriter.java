@@ -7,7 +7,7 @@ import javax.xml.bind.JAXB;
 import java.io.File;
 
 /**
- * Created by matio on 10.04.2017.
+ * Created by Jakub on 10.04.2017.
  */
 public class XMLWriter {
     public static void writeArticleToFile(Article article, String directory) {

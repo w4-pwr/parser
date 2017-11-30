@@ -5,7 +5,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
 /**
- * Created by Evelan on 16/02/16.
+ * Created by Jakub on 16/02/16.
  */
 public class SchemaUtils {
 

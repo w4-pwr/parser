@@ -1,7 +1,7 @@
 package pl.pwr.edu.parser.model;
 
 /**
- * Created by Mateusz Manka on 01.04.2017.
+ * Created by Jakub on 01.04.2017.
  */
 public class Quote {
     private String description;

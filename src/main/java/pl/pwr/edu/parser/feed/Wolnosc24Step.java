@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import static com.google.common.collect.Lists.newArrayList;
 
 /**
- * Created by panajot on 4/27/17.
+ * Created by Jakub on 4/27/17.
  */
 public class Wolnosc24Step implements Step {
     private static String baseUrl = "http://wolnosc24.pl/";

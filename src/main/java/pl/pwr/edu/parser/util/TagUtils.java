@@ -5,7 +5,7 @@ import com.google.common.base.Splitter;
 import java.util.stream.Collectors;
 
 /**
- * Created by evelan on 23/04/2017.
+ * Created by Jakub on 23/04/2017.
  */
 public class TagUtils {
 

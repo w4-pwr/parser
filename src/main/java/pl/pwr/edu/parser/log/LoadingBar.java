@@ -3,7 +3,7 @@ package pl.pwr.edu.parser.log;
 import java.util.stream.IntStream;
 
 /**
- * Created by matio on 10.04.2017.
+ * Created by Jakub on 10.04.2017.
  */
 public class LoadingBar {
     private static final String VERTICAL_SIGN = "_";
