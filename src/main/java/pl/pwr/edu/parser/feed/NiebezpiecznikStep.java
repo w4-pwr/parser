@@ -3,6 +3,7 @@ package pl.pwr.edu.parser.feed;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,7 +13,7 @@ import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.util.JsoupConnector;
-import pl.pwr.edu.parser.writers.XMLWriter;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Component
 public class NiebezpiecznikStep implements Step {
@@ -25,13 +26,16 @@ public class NiebezpiecznikStep implements Step {
 	@Override
 	public List<Article> parse() {
 		List<String> links = getLinks();
-		return links.stream().map(this::parseLink)
-				.peek(a -> {
-					if (a != null) {
-						XMLWriter.writeArticleToFile(a, dir);
-					}
-				})
+		List<Article> articles = links.stream().map(this::parseLink)
+				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
+
+		articles.forEach(this::writeArticle);
+		return articles;
+	}
+
+	private void writeArticle(Article article) {
+		throw new NotImplementedException();
 	}
 
 	private Article parseLink(String articleUrl) {
@@ -68,7 +72,7 @@ public class NiebezpiecznikStep implements Step {
 
 	private String getKeywords(Document doc) {
 		StringBuilder keywords = new StringBuilder();
-		doc.select("a[rel=tag]").forEach(a -> keywords.append(a.text() + ", "));
+		doc.select("a[rel=tag]").forEach(a -> keywords.append(a.text()).append(", "));
 		return keywords.toString().trim();
 	}
 
@@ -82,7 +86,7 @@ public class NiebezpiecznikStep implements Step {
 		return null;
 	}
 
-	public List<String> getLinks() {
+	private List<String> getLinks() {
 		List<String> links = new ArrayList<>();
 		try {
 			for (int pageNumber = 1; ; pageNumber++) {

@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.util.SchemaUtils;
 import pl.pwr.edu.parser.util.TagUtils;
-import pl.pwr.edu.parser.writers.XMLWriter;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Created by Jakub Pomykała on 19/04/2017.
@@ -48,7 +48,7 @@ public class PurePcStep implements Step {
 	}
 
 	private void writeToFile(Article article) {
-		XMLWriter.writeArticleToFile(article, dir);
+		throw new NotImplementedException();
 	}
 
 	private String getArticlePageUrl(int page) {
@@ -60,7 +60,7 @@ public class PurePcStep implements Step {
 			Document document = Jsoup.connect(url).get();
 			return extractAllArticleLinks(document);
 		} catch (IOException e) {
-			System.err.printf("Cannot fetch article urls, " + e.getMessage());
+			System.err.print("Cannot fetch article urls, " + e.getMessage());
 			e.printStackTrace();
 			return Collections.emptyList();
 		}
@@ -104,7 +104,7 @@ public class PurePcStep implements Step {
 		return Jsoup.connect(articleUrl).get();
 	}
 
-	private Article extractArticle(Document articleDocument) throws IOException {
+	private Article extractArticle(Document articleDocument) {
 		Article article = new Article(articleDocument.location());
 		article.setTitle(getTitle(articleDocument));
 		article.setBody(getBody(articleDocument));

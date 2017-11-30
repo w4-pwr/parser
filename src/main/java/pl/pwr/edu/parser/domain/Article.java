@@ -58,4 +58,8 @@ public class Article {
 				", body='" + body + '\'' +
 				'}';
 	}
+
+	public String getTitle() {
+		return title;
+	}
 }

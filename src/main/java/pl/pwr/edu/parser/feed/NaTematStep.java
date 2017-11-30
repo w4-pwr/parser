@@ -4,17 +4,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
-import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.domain.Quote;
+import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.util.JsoupConnector;
-import pl.pwr.edu.parser.writers.XMLWriter;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Component
 public class NaTematStep implements Step {
@@ -40,11 +41,14 @@ public class NaTematStep implements Step {
 	}
 
 	private void parse(String link) {
-		Article article = parseLink(link);
+		Optional<Article> article = Optional.ofNullable(parseLink(link));
 		parsedArticles++;
-		if (article != null) {
-			XMLWriter.writeArticleToFile(article, dir);
-		}
+		article.ifPresent(this::writeArticle);
+
+	}
+
+	private void writeArticle(Article article) {
+		throw new NotImplementedException();
 	}
 
 
@@ -71,13 +75,10 @@ public class NaTematStep implements Step {
 
 		List<String> subcategoriesLinks = getSubcategoriesLinks();
 		loadingBar.createVerticalLoadingBar(subcategoriesLinks.size());
-
-		List<String> links = subcategoriesLinks.parallelStream().
+		return subcategoriesLinks.parallelStream().
 				map(this::getArticlesForSubcategory)
 				.peek(s -> loadingBar.indicateVerticalLoading())
 				.flatMap(List::stream).collect(Collectors.toList());
-
-		return links;
 	}
 
 	private List<String> getArticlesForSubcategory(String s) {
@@ -107,7 +108,7 @@ public class NaTematStep implements Step {
 		Document doc = JsoupConnector.connect(articleUrl, SLEEP_TIME);
 
 		Elements titleElement = doc.select(".art__title");
-		if (doc == null || titleElement == null || titleElement.isEmpty()) {
+		if (titleElement == null || titleElement.isEmpty()) {
 			return null;
 		}
 
@@ -212,10 +213,7 @@ public class NaTematStep implements Step {
 
 	private boolean isFromYear(String link) {
 		String[] splited = link.split(",");
-		if (splited.length > 1 && splited[1].startsWith(yearToCheck)) {
-			return true;
-		}
-		return false;
+		return splited.length > 1 && splited[1].startsWith(yearToCheck);
 	}
 
 

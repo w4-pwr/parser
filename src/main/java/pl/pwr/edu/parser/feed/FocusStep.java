@@ -12,20 +12,17 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.stereotype.Component;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.util.SchemaUtils;
 import pl.pwr.edu.parser.util.TagUtils;
-import pl.pwr.edu.parser.writers.XMLWriter;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Created by Jakub Pomykała on 19/04/2017.
  */
-@Component
 public class FocusStep implements Step {
 
 	private static final String BASE_URL = "http://www.focus.pl";
-	private static String dir = System.getProperty("user.home") + "/Desktop/Focus/";
 
 	private List<String> forbiddenAuthors = Lists.newArrayList("pap", "redakcja");
 
@@ -48,7 +45,7 @@ public class FocusStep implements Step {
 	}
 
 	private void writeToFile(Article article) {
-		XMLWriter.writeArticleToFile(article, dir);
+		throw new NotImplementedException();
 	}
 
 	private String getArticleUrl(int articleId) {
@@ -75,7 +72,7 @@ public class FocusStep implements Step {
 		return Jsoup.connect(articleUrl).get();
 	}
 
-	private Article extractArticle(Document document) throws IOException {
+	private Article extractArticle(Document document) {
 		Article article = new Article(document.location());
 		article.setTitle(getTitle(document));
 		article.setBody(getBody(document));

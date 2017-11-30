@@ -1,8 +1,8 @@
 package pl.pwr.edu.parser.feed;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -11,26 +11,28 @@ import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.util.JsoupConnector;
-import pl.pwr.edu.parser.writers.XMLWriter;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Component
 public class Zaufana3StronaStep implements Step {
 
 	private final static String pageLink = "https://zaufanatrzeciastrona.pl/page/";
 	private final static int SLEEP_TIME = 3500;
-	private final static String dir =
-			System.getProperty("user.home") + File.separator + "studia" + File.separator + "zaufana3strona" + File.separator;
 
 	@Override
 	public List<Article> parse() {
 		List<String> links = getLinks();
-		return links.stream().map(this::parseLink)
-				.peek(a -> {
-					if (a != null) {
-						XMLWriter.writeArticleToFile(a, dir);
-					}
-				})
+		List<Article> articles = links.stream()
+				.map(this::parseLink)
+				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
+
+		articles.forEach(this::writeArticle);
+		return articles;
+	}
+
+	private void writeArticle(Article article) {
+		throw new NotImplementedException();
 	}
 
 	private Article parseLink(String articleUrl) {
@@ -66,7 +68,7 @@ public class Zaufana3StronaStep implements Step {
 
 	private String getKeywords(Document doc) {
 		StringBuilder keywords = new StringBuilder();
-		doc.select("a[rel=tag]").forEach(a -> keywords.append(a.text() + ", "));
+		doc.select("a[rel=tag]").forEach(a -> keywords.append(a.text()).append(", "));
 		return keywords.toString().trim();
 	}
 
@@ -74,7 +76,7 @@ public class Zaufana3StronaStep implements Step {
 		return doc.select("a[rel=author]").text();
 	}
 
-	public List<String> getLinks() {
+	private List<String> getLinks() {
 		List<String> links = new ArrayList<>();
 		try {
 			for (int pageNumber = 1; ; pageNumber++) {

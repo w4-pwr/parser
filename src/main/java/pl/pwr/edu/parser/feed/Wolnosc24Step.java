@@ -11,9 +11,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
-import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.domain.Article;
-import pl.pwr.edu.parser.writers.XMLWriter;
+import pl.pwr.edu.parser.log.LoadingBar;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Created by Jakub on 4/27/17.
@@ -22,7 +22,6 @@ import pl.pwr.edu.parser.writers.XMLWriter;
 public class Wolnosc24Step implements Step {
 
 	private static String baseUrl = "http://wolnosc24.pl/";
-	private static String dir = System.getProperty("user.home") + "/Desktop/Wolnosc24/";
 	private int parsedArticles = 1;
 
 	@Override
@@ -42,8 +41,12 @@ public class Wolnosc24Step implements Step {
 	}
 
 	void parse(Article article) {
-		XMLWriter.writeArticleToFile(article, dir);
+		writeArticle();
 		parsedArticles++;
+	}
+
+	private void writeArticle() {
+		throw new NotImplementedException();
 	}
 
 	private boolean parseLink(String articleUrl) {

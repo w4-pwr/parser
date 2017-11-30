@@ -4,19 +4,19 @@ import static java.util.stream.Collectors.toList;
 import static pl.pwr.edu.parser.util.JsoupConnector.connect;
 
 import com.google.common.collect.Maps;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Component;
-import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.domain.Article;
+import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.util.JsoupConnector;
-import pl.pwr.edu.parser.writers.XMLWriter;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Component
 public class PrawicaStep implements Step {
@@ -36,11 +36,14 @@ public class PrawicaStep implements Step {
 		loadingBar.setHorizontalMaxNumber(links.size());
 		links.parallelStream()
 				.map(this::parseLink)
-				.filter(a -> a != null)
-				.peek(a -> XMLWriter.writeArticleToFile(a, dir))
-				.peek(a -> loadingBar.indicateHorizontalLoading(parsedArticles))
-				.count();
+				.filter(Objects::nonNull)
+				.peek(this::writeArticle)
+				.forEach(a -> loadingBar.indicateHorizontalLoading(parsedArticles));
 		return new ArrayList<>();
+	}
+
+	private void writeArticle(Article article) {
+		throw new NotImplementedException();
 	}
 
 	private List<String> getArticlesLinks() {
@@ -77,17 +80,13 @@ public class PrawicaStep implements Step {
 	private Article parseLink(String articleUrl) {
 		parsedArticles++;
 		Article article = new Article(articleUrl);
-		try {
-			Document doc = JsoupConnector.connect(BASE_URL + articleUrl, SLEEP_TIME);
-			article.setTitle(doc.select("#page-title").first().text().trim());
-			parseArticleMetaData(article, doc);
-			if (article.getMetadata() == null) {
-				return null;
-			}
-			article.setBody(parseArticleBody(doc));
-		} catch (IOException e) {
-			e.printStackTrace();
+		Document doc = JsoupConnector.connect(BASE_URL + articleUrl, SLEEP_TIME);
+		article.setTitle(doc.select("#page-title").first().text().trim());
+		parseArticleMetaData(article, doc);
+		if (article.getMetadata() == null) {
+			return null;
 		}
+		article.setBody(parseArticleBody(doc));
 
 		return article;
 	}
@@ -112,7 +111,7 @@ public class PrawicaStep implements Step {
 		return "";
 	}
 
-	private String parseArticleBody(Document doc) throws IOException {
+	private String parseArticleBody(Document doc) {
 		return doc.select(".field-item").first().select("p").text().trim();
 	}
 

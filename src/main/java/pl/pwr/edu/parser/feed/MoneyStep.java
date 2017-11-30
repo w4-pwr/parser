@@ -12,32 +12,31 @@ import java.util.Optional;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.springframework.stereotype.Component;
 import pl.pwr.edu.parser.domain.Article;
-import pl.pwr.edu.parser.writers.XMLWriter;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-@Component
+//@Component
 public class MoneyStep implements Step {
 
-	public static final String AUTHORS_URL = "http://www.money.pl/archiwum/autor/";
-	private static String dir = System.getProperty("user.home") + "/Desktop/Money/";
+	private static final String AUTHORS_URL = "http://www.money.pl/archiwum/autor/";
 
 	@Override
 	public List<Article> parse() {
 		List<String> allArticlesLinks = getAllArticlesLinks();
-		allArticlesLinks
+		List<Article> articles = allArticlesLinks
 				.stream()
-				.map(this::tryParseAndWriteArticleToFile)
+				.map(this::tryParseArticle)
 				.filter(Optional::isPresent)
+				.map(Optional::get)
 				.collect(toList());
+		articles.forEach(this::writeArticle);
 		return newArrayList();
 	}
 
-	private Optional<Article> tryParseAndWriteArticleToFile(String articleUrl) {
+	private Optional<Article> tryParseArticle(String articleUrl) {
 		try {
 			Article article = parseArticle(articleUrl);
 			System.out.println(article);
-			XMLWriter.writeArticleToFile(article, dir);
 			return Optional.of(article);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -45,6 +44,10 @@ public class MoneyStep implements Step {
 			System.out.printf("Article didn't match general format Url:%s\n", articleUrl);
 		}
 		return Optional.empty();
+	}
+
+	private void writeArticle(Article article) {
+		throw new NotImplementedException();
 	}
 
 	private Article parseArticle(String articleUrl) throws IOException {

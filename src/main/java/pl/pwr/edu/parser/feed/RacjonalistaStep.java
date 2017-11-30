@@ -17,14 +17,13 @@ import org.springframework.stereotype.Component;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.domain.Quote;
 import pl.pwr.edu.parser.util.JsoupConnector;
-import pl.pwr.edu.parser.writers.XMLWriter;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Component
 public class RacjonalistaStep implements Step {
 
 	private final static String baseUrl = "http://www.racjonalista.pl";
 	private final static String articleListUrl = "http://www.racjonalista.pl/index.php/s,27";
-	private final static String dir = System.getProperty("user.home") + "\\Desktop\\Racjonalista\\";
 	private final static Pattern FOOTNOTE_PATTERN = Pattern.compile("\\[\\s*(\\d+)\\s*]");
 	private final static int SLEEP_TIME = 3500;
 
@@ -34,8 +33,12 @@ public class RacjonalistaStep implements Step {
 
 		return links.stream()
 				.map(this::parseLink)
-				.peek(a -> XMLWriter.writeArticleToFile(a, dir))
+				.peek(this::writeArticle)
 				.collect(Collectors.toList());
+	}
+
+	private void writeArticle(Article article) {
+		throw new NotImplementedException();
 	}
 
 	private List<String> getArticlesLinks() {
