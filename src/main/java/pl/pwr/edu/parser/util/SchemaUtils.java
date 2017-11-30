@@ -9,21 +9,21 @@ import org.jsoup.select.Elements;
  */
 public class SchemaUtils {
 
-  public static Optional<String> getItemPropValue(String itemPropKey, Document document) {
-    String ITEM_PROP_ATTR = "itemprop";
-    return getMetaValue(ITEM_PROP_ATTR, itemPropKey, document);
-  }
+	public static Optional<String> getItemPropValue(String itemPropKey, Document document) {
+		String ITEM_PROP_ATTR = "itemprop";
+		return getMetaValue(ITEM_PROP_ATTR, itemPropKey, document);
+	}
 
-  public static Optional<String> getMetaValue(
-      String metaAttributeName,
-      String metaAttributeKey,
-      Document document) {
-    Elements itemPropElements = document.getElementsByAttribute(metaAttributeName);
-    return itemPropElements
-        .stream()
-        .filter(element -> element.attr(metaAttributeName).contains(metaAttributeKey))
-        .map(element -> element.attr("content"))
-        .findFirst();
-  }
+	public static Optional<String> getMetaValue(
+			String metaAttributeName,
+			String metaAttributeKey,
+			Document document) {
+		Elements itemPropElements = document.getElementsByAttribute(metaAttributeName);
+		return itemPropElements
+				.stream()
+				.filter(element -> element.attr(metaAttributeName).contains(metaAttributeKey))
+				.map(element -> element.attr("content"))
+				.findFirst();
+	}
 
 }

@@ -1,148 +1,150 @@
 package pl.pwr.edu.parser.feed;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import pl.pwr.edu.parser.log.LoadingBar;
-import pl.pwr.edu.parser.model.Article;
-import pl.pwr.edu.parser.util.xml.CMDIWriter;
-import pl.pwr.edu.parser.util.xml.XMLWriter;
+import static com.google.common.collect.Lists.newArrayList;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static com.google.common.collect.Lists.newArrayList;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.springframework.stereotype.Component;
+import pl.pwr.edu.parser.log.LoadingBar;
+import pl.pwr.edu.parser.domain.Article;
+import pl.pwr.edu.parser.writers.XMLWriter;
 
 /**
  * Created by Jakub on 4/27/17.
  */
+@Component
 public class Wolnosc24Step implements Step {
-    private static String baseUrl = "http://wolnosc24.pl/";
-    private static String dir = System.getProperty("user.home") + "/Desktop/Wolnosc24/";
-    private int parsedArticles = 1;
 
-    @Override
-    public List<Article> parse() {
+	private static String baseUrl = "http://wolnosc24.pl/";
+	private static String dir = System.getProperty("user.home") + "/Desktop/Wolnosc24/";
+	private int parsedArticles = 1;
 
-        List<String> allArticlesLinks = getArticlesLink();
+	@Override
+	public List<Article> parse() {
 
-        System.out.println(baseUrl);
-        LoadingBar loadingBar = new LoadingBar();
-        loadingBar.setHorizontalMaxNumber(allArticlesLinks.size());
-        allArticlesLinks.stream().peek(a -> loadingBar.indicateHorizontalLoading(parsedArticles)).forEach(link -> parseLink(link));
-//        allArticlesLinks.forEach(link -> parseLink(link));
-        System.out.println("Finished!");
+		List<String> allArticlesLinks = getArticlesLink();
 
-        return newArrayList();
-    }
+		System.out.println(baseUrl);
+		LoadingBar loadingBar = new LoadingBar();
+		loadingBar.setHorizontalMaxNumber(allArticlesLinks.size());
+		allArticlesLinks.stream()
+				.peek(a -> loadingBar.indicateHorizontalLoading(parsedArticles))
+				.forEach(this::parseLink);
+		System.out.println("Finished!");
 
-    void parse(Article article) {
-        XMLWriter.writeArticleToFile(article, dir);
-        CMDIWriter.writeArticleToFile(article, dir);
-        parsedArticles++;
-    }
+		return newArrayList();
+	}
 
-    boolean parseLink(String articleUrl) {
-        if ( articleUrl.indexOf("wolnosc24") == -1 ) return false;
-        Article article = new Article(articleUrl);
+	void parse(Article article) {
+		XMLWriter.writeArticleToFile(article, dir);
+		parsedArticles++;
+	}
 
-        try {
-            Document doc = Jsoup.connect(articleUrl).get();
-            Element el = doc.getElementsByTag("article").first();
+	private boolean parseLink(String articleUrl) {
+		if (!articleUrl.contains("wolnosc24")) {
+			return false;
+		}
+		Article article = new Article(articleUrl);
 
-            article.setTitle(el
-                    .select("h1[class='entry-title']")
-                    .text()
-            );
+		try {
+			Document doc = Jsoup.connect(articleUrl).get();
+			Element el = doc.getElementsByTag("article").first();
 
-            parseArticleMetaData(article, el);
-            parseBody(article, el);
-            parse(article);
+			article.setTitle(el
+					.select("h1[class='entry-title']")
+					.text()
+			);
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
+			parseArticleMetaData(article, el);
+			parseBody(article, el);
+			parse(article);
 
-        return true;
-    }
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
 
-    private void parseBody(Article article, Element el) {
-        String text = el
-                .getElementsByTag("p")
-                .text();
+		return true;
+	}
 
-        article.setBody(text);
-    }
+	private void parseBody(Article article, Element el) {
+		String text = el
+				.getElementsByTag("p")
+				.text();
 
-    private void parseArticleMetaData(Article article, Element el) {
-        HashMap<String, String> metaData = new HashMap<>();
+		article.setBody(text);
+	}
 
-        metaData.put("author", el
-                .getElementsByClass("td-module-meta-info")
-                .first()
-                .select("a[href]")
-                .text()
-        );
-        metaData.put("date", el
-                .getElementsByClass("td-module-meta-info")
-                .first()
-                .select("time[dateTime]")
-                .text()
-        );
+	private void parseArticleMetaData(Article article, Element el) {
+		HashMap<String, String> metaData = new HashMap<>();
 
-        article.setMetadata(metaData);
-    }
+		metaData.put("author", el
+				.getElementsByClass("td-module-meta-info")
+				.first()
+				.select("a[href]")
+				.text()
+		);
+		metaData.put("date", el
+				.getElementsByClass("td-module-meta-info")
+				.first()
+				.select("time[dateTime]")
+				.text()
+		);
 
-    private List<String> getArticlesLink() {
-        List<String> links = new ArrayList<>();
-        links.addAll(getArticlesFromYear(2016));
-        links.addAll(getArticlesFromYear(2017));
-        return links;
-    }
+		article.setMetadata(metaData);
+	}
 
-    private List<String> getArticlesFromYear(int year) {
-        List<String> links = new ArrayList<>();
-        String url = baseUrl + year + "/page/";
+	private List<String> getArticlesLink() {
+		List<String> links = new ArrayList<>();
+		links.addAll(getArticlesFromYear(2016));
+		links.addAll(getArticlesFromYear(2017));
+		return links;
+	}
 
-        try {
-            Document doc = Jsoup.connect(baseUrl + year).get();
-            String pagesStr = doc.getElementsByClass("page-nav")
-                    .select("a[class='last']")
-                    .attr("title")
-                    .toString();
-            int pages = Integer.parseInt(pagesStr);
-            System.out.println("Pages: " + pages);
-            for (int i = 1; i <= pages; ++i)
-                links.addAll(getArticlesLinkFromPage(url, i));
+	private List<String> getArticlesFromYear(int year) {
+		List<String> links = new ArrayList<>();
+		String url = baseUrl + year + "/page/";
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+		try {
+			Document doc = Jsoup.connect(baseUrl + year).get();
+			String pagesStr = doc.getElementsByClass("page-nav")
+					.select("a[class='last']")
+					.attr("title");
+			int pages = Integer.parseInt(pagesStr);
+			System.out.println("Pages: " + pages);
+			for (int i = 1; i <= pages; ++i) {
+				links.addAll(getArticlesLinkFromPage(url, i));
+			}
 
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
-        return links;
-    }
+		return links;
+	}
 
-    private List<String> getArticlesLinkFromPage(String url, int page) {
-        List<String> links = new ArrayList<>();
-        String basePageUrl = url + page;
+	private List<String> getArticlesLinkFromPage(String url, int page) {
+		List<String> links = new ArrayList<>();
+		String basePageUrl = url + page;
 
-        try {
-            Document doc = Jsoup.connect(basePageUrl).get();
+		try {
+			Document doc = Jsoup.connect(basePageUrl).get();
 
-            links.addAll(doc.getElementsByClass("td-container ")
-                    .select("div[class='item-details']")
-                    .select("a")
-                    .stream()
-                    .map(link -> link.attr("href"))
-                    .collect(Collectors.toList()));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return links;
-    }
+			links.addAll(doc.getElementsByClass("td-container ")
+					.select("div[class='item-details']")
+					.select("a")
+					.stream()
+					.map(link -> link.attr("href"))
+					.collect(Collectors.toList()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return links;
+	}
 }

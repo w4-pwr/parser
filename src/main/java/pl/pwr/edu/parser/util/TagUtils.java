@@ -9,13 +9,13 @@ import java.util.stream.Collectors;
  */
 public class TagUtils {
 
-  public static String getTrimedAndCommaSeparatedTags(String tags) {
-    return Splitter.on(CharMatcher.is(','))
-        .trimResults()
-        .omitEmptyStrings()
-        .splitToList(tags)
-        .stream()
-        .distinct()
-        .collect(Collectors.joining(","));
-  }
+	public static String getTrimedAndCommaSeparatedTags(String tags) {
+		return Splitter.on(CharMatcher.is(','))
+				.trimResults()
+				.omitEmptyStrings()
+				.splitToList(tags)
+				.stream()
+				.distinct()
+				.collect(Collectors.joining(","));
+	}
 }

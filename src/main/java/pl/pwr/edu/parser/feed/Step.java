@@ -1,13 +1,9 @@
 package pl.pwr.edu.parser.feed;
 
-import pl.pwr.edu.parser.model.Article;
-
 import java.util.List;
+import pl.pwr.edu.parser.domain.Article;
 
 public interface Step {
 
-    List<Article> parse();
-
-    default void setYearToCheck(String yearToCheck){};
-
+	List<Article> parse();
 }
