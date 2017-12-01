@@ -23,7 +23,6 @@ public class NaTematStep implements Step {
 	private String yearToCheck = "";
 	private static String baseUrl = "http://natemat.pl";
 	private static String articleListUrl = "http://natemat.pl/posts-map/";
-	private static String dir = System.getProperty("user.home") + "\\Desktop\\NaTemat\\";
 
 	private static int SLEEP_TIME = 5500;
 	private int parsedArticles = 0;

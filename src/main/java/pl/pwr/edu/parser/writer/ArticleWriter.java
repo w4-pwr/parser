@@ -1,7 +1,8 @@
-package pl.pwr.edu.parser.writers;
+package pl.pwr.edu.parser.writer;
 
 import java.io.IOException;
 import pl.pwr.edu.parser.domain.Article;
+import pl.pwr.edu.parser.writer.path.PathResolver;
 
 /**
  * @author Jakub Pomykala on 11/30/17.
@@ -9,5 +10,7 @@ import pl.pwr.edu.parser.domain.Article;
 public interface ArticleWriter {
 
 	void write(Article article) throws IOException;
+
+	void setPathResolver(PathResolver strategy);
 
 }

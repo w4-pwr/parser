@@ -11,7 +11,8 @@ public class LoadingBar {
 	private int horizontalMaxNumber;
 
 	public void createVerticalLoadingBar(int number) {
-		System.out.println("\nNumber to load : " + number + " \n start loading :");
+		String formattedMessage = String.format("Number to load: %d", number);
+		System.out.println(formattedMessage);
 		IntStream.range(0, number).forEach(i -> System.out.print(VERTICAL_SIGN));
 		System.out.println();
 	}

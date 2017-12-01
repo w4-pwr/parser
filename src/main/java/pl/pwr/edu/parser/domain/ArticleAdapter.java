@@ -1,7 +1,6 @@
-package pl.pwr.edu.parser.writers;
+package pl.pwr.edu.parser.domain;
 
 import java.util.Optional;
-import pl.pwr.edu.parser.domain.Article;
 
 /**
  * @author Jakub Pomykala on 11/30/17.

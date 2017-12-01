@@ -25,8 +25,6 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 public class PurePcStep implements Step {
 
 	private static final String BASE_URL = "https://www.purepc.pl";
-	private static String dir = System.getProperty("user.home") + "/Desktop/PurePc/";
-
 
 	@Override
 	public List<Article> parse() {
