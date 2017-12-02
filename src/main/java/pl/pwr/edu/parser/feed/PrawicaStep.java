@@ -16,14 +16,12 @@ import org.springframework.stereotype.Component;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.util.JsoupConnector;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Component
-public class PrawicaStep implements Step {
+public final class PrawicaStep extends ParserTemplateStep {
 
 	private static final String BASE_URL = "http://www.prawica.net";
 	private Pattern dateRegex = Pattern.compile("@ (.*), k");
-	private static String dir = System.getProperty("user.home") + "\\Desktop\\Prawica\\";
 	private static int SLEEP_TIME = 5500;
 	private int parsedArticles = 0;
 
@@ -40,10 +38,6 @@ public class PrawicaStep implements Step {
 				.peek(this::writeArticle)
 				.forEach(a -> loadingBar.indicateHorizontalLoading(parsedArticles));
 		return new ArrayList<>();
-	}
-
-	private void writeArticle(Article article) {
-		throw new NotImplementedException();
 	}
 
 	private List<String> getArticlesLinks() {

@@ -11,10 +11,9 @@ import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.util.JsoupConnector;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Component
-public class Zaufana3StronaStep implements Step {
+public final class Zaufana3StronaStep extends ParserTemplateStep {
 
 	private final static String pageLink = "https://zaufanatrzeciastrona.pl/page/";
 	private final static int SLEEP_TIME = 3500;
@@ -29,10 +28,6 @@ public class Zaufana3StronaStep implements Step {
 
 		articles.forEach(this::writeArticle);
 		return articles;
-	}
-
-	private void writeArticle(Article article) {
-		throw new NotImplementedException();
 	}
 
 	private Article parseLink(String articleUrl) {

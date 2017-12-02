@@ -17,10 +17,9 @@ import org.springframework.stereotype.Component;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.domain.Quote;
 import pl.pwr.edu.parser.util.JsoupConnector;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Component
-public class RacjonalistaStep implements Step {
+public final class RacjonalistaStep extends ParserTemplateStep {
 
 	private final static String baseUrl = "http://www.racjonalista.pl";
 	private final static String articleListUrl = "http://www.racjonalista.pl/index.php/s,27";
@@ -35,10 +34,6 @@ public class RacjonalistaStep implements Step {
 				.map(this::parseLink)
 				.peek(this::writeArticle)
 				.collect(Collectors.toList());
-	}
-
-	private void writeArticle(Article article) {
-		throw new NotImplementedException();
 	}
 
 	private List<String> getArticlesLinks() {

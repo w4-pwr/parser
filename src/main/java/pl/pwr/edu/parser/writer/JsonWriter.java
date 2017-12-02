@@ -3,6 +3,9 @@ package pl.pwr.edu.parser.writer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.jetbrains.annotations.NotNull;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.domain.ArticleAdapter;
@@ -30,8 +33,17 @@ public final class JsonWriter implements ArticleWriter {
 
 	@Override
 	public void write(Article article) throws IOException {
-		String pathWithFileName = getPathWithFileName(article);
+		writeAndGetPath(article);
+	}
+
+	@Override
+	public Path writeAndGetPath(Article article) throws IOException {
+		Path path = getPath(article);
+		Files.createDirectories(path);
+		String fileName = getFileName(article);
+		String pathWithFileName = path + File.separator + fileName;
 		objectMapper.writeValue(new File(pathWithFileName), article);
+		return Paths.get(pathWithFileName);
 	}
 
 	@Override
@@ -40,14 +52,17 @@ public final class JsonWriter implements ArticleWriter {
 	}
 
 	@NotNull
-	private String getPathWithFileName(Article article) {
-		ArticleAdapter adapter = ArticleAdapter.createAdapter(article);
+	private Path getPath(Article article) {
 		final String directoryPath = pathResolver.resolvePath(article);
-		final String fileName = adapter.getTitleWithoutSpaces();
+		return Paths.get(BASE_WRITE_PATH, File.separator, directoryPath);
+	}
+
+	@NotNull
+	private String getFileName(Article article) {
+		ArticleAdapter adapter = ArticleAdapter.of(article);
+		final String fileName = adapter.getCleanTitle();
 		final String JSON_EXTENSION = ".json";
-		return BASE_WRITE_PATH +
-				File.pathSeparator +
-				directoryPath +
+		return File.separator +
 				fileName +
 				JSON_EXTENSION;
 	}

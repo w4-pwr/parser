@@ -9,6 +9,7 @@ import pl.pwr.edu.parser.shell.arguments.OutputEnum;
 import pl.pwr.edu.parser.shell.arguments.PathResolveEnum;
 import pl.pwr.edu.parser.writer.ArticleWriter;
 import pl.pwr.edu.parser.writer.JsonWriter;
+import pl.pwr.edu.parser.writer.MongoDBWriter;
 import pl.pwr.edu.parser.writer.TxtWriter;
 import pl.pwr.edu.parser.writer.path.AllInOneFilePathResolver;
 import pl.pwr.edu.parser.writer.path.PathByArticleResolver;
@@ -24,8 +25,11 @@ public class WritingOptionCommands {
 	@Autowired
 	private ParserChain parserChain;
 
-	private final String DEFAULT_OUTPUT = "JSON";
+	private final String DEFAULT_OUTPUT = "MONGO";
+	@Autowired
+	private MongoDBWriter mongoDBWriter;
 	private final String DEFAULT_PATH_RESOLVE = "ARTIST";
+	private String userDirectory = System.getProperty("user.dir");
 
 	@ShellMethod("Uruchom parser z domyślne parametrami")
 	public void start(
@@ -34,7 +38,12 @@ public class WritingOptionCommands {
 	) {
 		PathResolver pathResolver = lookupForPathResolver(resolveBy);
 		ArticleWriter articleWriter = lookupForArticleWriter(outputOption);
-		articleWriter.setPathResolver(pathResolver);
+		try {
+			articleWriter.setPathResolver(pathResolver);
+		} catch (UnsupportedOperationException uoe) {
+
+		}
+
 		parserChain.invoke(articleWriter);
 	}
 
@@ -56,12 +65,14 @@ public class WritingOptionCommands {
 
 
 	private ArticleWriter lookupForArticleWriter(OutputEnum outputOption) {
-		String userDirectory = System.getProperty("user.dir");
 		switch (outputOption) {
 			case TXT:
 				return TxtWriter.getInstance(userDirectory);
 			case JSON:
 				return JsonWriter.getInstance(userDirectory);
+
+			case MONGO:
+				return mongoDBWriter;
 			default:
 				System.err.printf("Output option %s not match to any cases. Using %s ",
 						outputOption.name(),

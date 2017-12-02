@@ -13,13 +13,19 @@ public final class ArticleAdapter {
 		this.article = article;
 	}
 
-	public static ArticleAdapter createAdapter(Article article) {
+	public static ArticleAdapter of(Article article) {
 		return new ArticleAdapter(article);
 	}
 
-	public String getTitleWithoutSpaces() {
-		String articleTitle = Optional.ofNullable(article.getTitle()).orElse("no title");
-		return articleTitle.replaceAll("\\s+", "-");
+	public String getCleanTitle() {
+		String articleTitle = Optional.ofNullable(article)
+				.map(Article::getTitle)
+				.orElse("no title");
+		return articleTitle
+				.replaceAll("[^A-Za-z0-9\\s]", "")
+				.replaceAll("\\s+", "-")
+				.trim()
+				.toLowerCase();
 	}
 
 }

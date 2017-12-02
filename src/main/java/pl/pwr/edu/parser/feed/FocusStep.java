@@ -15,12 +15,13 @@ import org.jsoup.select.Elements;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.util.SchemaUtils;
 import pl.pwr.edu.parser.util.TagUtils;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Created by Jakub Pomykała on 19/04/2017.
  */
-public class FocusStep implements Step {
+//@Component
+@Deprecated
+public final class FocusStep extends ParserTemplateStep {
 
 	private static final String BASE_URL = "http://www.focus.pl";
 
@@ -39,13 +40,9 @@ public class FocusStep implements Step {
 			String articleUrl = getArticleUrl(articleId);
 			Optional<Article> article = getArticle(articleUrl);
 			article.ifPresent(articles::add);
-			article.ifPresent(this::writeToFile);
+			article.ifPresent(this::writeArticle);
 		}
 		return articles;
-	}
-
-	private void writeToFile(Article article) {
-		throw new NotImplementedException();
 	}
 
 	private String getArticleUrl(int articleId) {

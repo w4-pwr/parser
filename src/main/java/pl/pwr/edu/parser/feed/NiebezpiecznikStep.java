@@ -13,10 +13,9 @@ import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.util.JsoupConnector;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Component
-public class NiebezpiecznikStep implements Step {
+public final class NiebezpiecznikStep extends ParserTemplateStep {
 
 	private final static String pageLink = "https://niebezpiecznik.pl/page/";
 	private final static int SLEEP_TIME = 4500;
@@ -32,10 +31,6 @@ public class NiebezpiecznikStep implements Step {
 
 		articles.forEach(this::writeArticle);
 		return articles;
-	}
-
-	private void writeArticle(Article article) {
-		throw new NotImplementedException();
 	}
 
 	private Article parseLink(String articleUrl) {

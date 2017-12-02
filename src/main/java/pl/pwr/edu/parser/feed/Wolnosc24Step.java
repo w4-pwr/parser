@@ -13,13 +13,12 @@ import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.log.LoadingBar;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Created by Jakub on 4/27/17.
  */
 @Component
-public class Wolnosc24Step implements Step {
+public final class Wolnosc24Step extends ParserTemplateStep {
 
 	private static String baseUrl = "http://wolnosc24.pl/";
 	private int parsedArticles = 1;
@@ -41,12 +40,8 @@ public class Wolnosc24Step implements Step {
 	}
 
 	void parse(Article article) {
-		writeArticle();
+		writeArticle(article);
 		parsedArticles++;
-	}
-
-	private void writeArticle() {
-		throw new NotImplementedException();
 	}
 
 	private boolean parseLink(String articleUrl) {

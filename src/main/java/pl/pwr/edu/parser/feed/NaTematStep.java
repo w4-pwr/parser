@@ -15,10 +15,9 @@ import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.domain.Quote;
 import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.util.JsoupConnector;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Component
-public class NaTematStep implements Step {
+public final class NaTematStep extends ParserTemplateStep {
 
 	private String yearToCheck = "";
 	private static String baseUrl = "http://natemat.pl";
@@ -45,11 +44,6 @@ public class NaTematStep implements Step {
 		article.ifPresent(this::writeArticle);
 
 	}
-
-	private void writeArticle(Article article) {
-		throw new NotImplementedException();
-	}
-
 
 	private List<String> getSubcategoriesLinks() {
 		List<String> links = new ArrayList<>();

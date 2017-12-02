@@ -16,13 +16,12 @@ import org.springframework.stereotype.Component;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.util.SchemaUtils;
 import pl.pwr.edu.parser.util.TagUtils;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Created by Jakub Pomykała on 19/04/2017.
  */
 @Component
-public class PurePcStep implements Step {
+public final class PurePcStep extends ParserTemplateStep {
 
 	private static final String BASE_URL = "https://www.purepc.pl";
 
@@ -40,13 +39,9 @@ public class PurePcStep implements Step {
 				.map(this::getArticle)
 				.filter(Optional::isPresent)
 				.map(Optional::get)
-				.forEach(this::writeToFile);
+				.forEach(this::writeArticle);
 
 		return Lists.newArrayList();
-	}
-
-	private void writeToFile(Article article) {
-		throw new NotImplementedException();
 	}
 
 	private String getArticlePageUrl(int page) {

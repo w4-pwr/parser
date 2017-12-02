@@ -5,5 +5,5 @@ package pl.pwr.edu.parser.shell.arguments;
  * @project parser
  */
 public enum OutputEnum {
-	JSON, TXT
+	JSON, TXT, MONGO
 }

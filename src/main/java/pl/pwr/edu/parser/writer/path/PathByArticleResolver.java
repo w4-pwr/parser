@@ -3,6 +3,7 @@ package pl.pwr.edu.parser.writer.path;
 import java.util.Optional;
 import java.util.UUID;
 import pl.pwr.edu.parser.domain.Article;
+import pl.pwr.edu.parser.domain.ArticleAdapter;
 
 /**
  * @author Jakub Pomykala on 12/1/17.
@@ -13,7 +14,8 @@ public final class PathByArticleResolver implements PathResolver {
 	@Override
 	public String resolvePath(Article article) {
 		return Optional.ofNullable(article)
-				.map(Article::getTitle)
+				.map(ArticleAdapter::of)
+				.map(ArticleAdapter::getCleanTitle)
 				.orElseGet(this::getDefaultName);
 	}
 

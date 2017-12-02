@@ -13,10 +13,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import pl.pwr.edu.parser.domain.Article;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 //@Component
-public class MoneyStep implements Step {
+@Deprecated//nie dziala
+public final class MoneyStep extends ParserTemplateStep {
 
 	private static final String AUTHORS_URL = "http://www.money.pl/archiwum/autor/";
 
@@ -44,10 +44,6 @@ public class MoneyStep implements Step {
 			System.out.printf("Article didn't match general format Url:%s\n", articleUrl);
 		}
 		return Optional.empty();
-	}
-
-	private void writeArticle(Article article) {
-		throw new NotImplementedException();
 	}
 
 	private Article parseArticle(String articleUrl) throws IOException {

@@ -1,16 +1,34 @@
 package pl.pwr.edu.parser.domain;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.bson.types.ObjectId;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+@Document
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
 public class Article {
+
+	@Id
+	private ObjectId id;
 
 	private String source;
 	private String title;
 	private String body;
 	private HashMap<String, String> metadata = new HashMap<>();
-	private List<Quote> quotes = new ArrayList<>();
+
+	@Version
+	private Long version;
 
 	public Article(String url) {
 		this.source = url;
@@ -30,33 +48,21 @@ public class Article {
 		return metadata;
 	}
 
-	public Article setMetadata(HashMap<String, String> metadata) {
+	public void setMetadata(HashMap<String, String> metadata) {
 		this.metadata = metadata;
-		return this;
 	}
 
 	public List<Quote> getQuotes() {
-		return quotes;
+		//Nie poczeba
+		return Collections.emptyList();
 	}
 
-	public Article setQuotes(List<Quote> quotes) {
-		this.quotes = quotes;
-		return this;
+	public void setQuotes(List<Quote> quotes) {
+		//Tego też nie czeba
 	}
 
 	public String getSource() {
 		return source;
-	}
-
-	@Override
-	public String toString() {
-		return "Article{" +
-				"source=" + source +
-				", title='" + title + '\'' +
-				", metadata=" + metadata +
-				", quotes=" + quotes +
-				", body='" + body + '\'' +
-				'}';
 	}
 
 	public String getTitle() {
