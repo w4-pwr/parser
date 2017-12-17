@@ -1,11 +1,13 @@
 package pl.pwr.edu.parser.writer;
 
+import static pl.pwr.edu.parser.writer.path.AllInOneFilePathResolver.OUTPUT_FILE_NAME;
+
 import java.io.File;
-import java.nio.file.Path;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import pl.pwr.edu.parser.domain.Article;
+import pl.pwr.edu.parser.writer.path.AllInOneFilePathResolver;
 
 /**
  * @author Jakub Pomykala on 12/1/17.
@@ -14,11 +16,13 @@ import pl.pwr.edu.parser.domain.Article;
 class JsonWriterTest {
 
 	private ArticleWriter writer;
+	private String userDirectory;
 
 	@BeforeEach
 	void setUp() {
-		String userDirectory = System.getProperty("user.dir") + File.separator + "test_output";
+		userDirectory = System.getProperty("user.dir") + File.separator + "test_output";
 		writer = JsonWriter.getInstance(userDirectory);
+		writer.setPathResolver(new AllInOneFilePathResolver());
 	}
 
 	@Test
@@ -31,12 +35,14 @@ class JsonWriterTest {
 				.build();
 
 		//when
-		Path path = writer.writeAndGetPath(article);
+		writer.write(article);
 
 		//then
-		File savedFile = new File(path.toUri());
+		String JSON_EXTENSION = ".json";
+		String pathToSavedFile = userDirectory + File.separator + OUTPUT_FILE_NAME + JSON_EXTENSION;
+		File savedFile = new File(pathToSavedFile);
 		Assertions.assertThat(savedFile).exists();
-		Assertions.assertThat(savedFile).hasName("czy-masz-raka.json");
+		Assertions.assertThat(savedFile).hasName(OUTPUT_FILE_NAME + JSON_EXTENSION);
 		Assertions.assertThat(savedFile).isFile();
 		Assertions.assertThat(savedFile).isAbsolute();
 		Assertions.assertThat(savedFile.length()).isNotZero();

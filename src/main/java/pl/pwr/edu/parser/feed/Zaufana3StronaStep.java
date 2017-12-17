@@ -1,33 +1,51 @@
 package pl.pwr.edu.parser.feed;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.google.common.collect.Sets;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.util.JsoupConnector;
 
 @Component
-public final class Zaufana3StronaStep extends ParserTemplateStep {
+@Order(40)
+public class Zaufana3StronaStep extends ParserTemplateStep {
 
 	private final static String pageLink = "https://zaufanatrzeciastrona.pl/page/";
-	private final static int SLEEP_TIME = 3500;
+	private final static int SLEEP_TIME = 500;
 
 	@Override
-	public List<Article> parse() {
-		List<String> links = getLinks();
-		List<Article> articles = links.stream()
-				.map(this::parseLink)
-				.filter(Objects::nonNull)
-				.collect(Collectors.toList());
+	public void parse() {
+		int page = 1;
+		while (page < 100) {
+			Set<String> linksOnPage = tryGetArticleLinksOnPage(page);
+			linksOnPage.stream()
+					.map(this::parseLink)
+					.filter(Objects::nonNull)
+					.forEach(this::writeArticle);
 
-		articles.forEach(this::writeArticle);
-		return articles;
+			page++;
+		}
+	}
+
+
+	private Set<String> tryGetArticleLinksOnPage(int page) {
+		try {
+			Document doc = JsoupConnector.connectThrowable(pageLink + page, SLEEP_TIME);
+			return doc.select(".entry-title")
+					.stream()
+					.map(e -> e.select("a"))
+					.map(e -> e.attr("href"))
+					.collect(Collectors.toSet());
+		} catch (Exception e) {
+			return Sets.newHashSet();
+		}
 	}
 
 	private Article parseLink(String articleUrl) {
@@ -71,19 +89,6 @@ public final class Zaufana3StronaStep extends ParserTemplateStep {
 		return doc.select("a[rel=author]").text();
 	}
 
-	private List<String> getLinks() {
-		List<String> links = new ArrayList<>();
-		try {
-			for (int pageNumber = 1; ; pageNumber++) {
-				Document doc = JsoupConnector.connectThrowable(pageLink + pageNumber, SLEEP_TIME);
-				doc.select(".entry-title").forEach(title -> {
-					links.add(title.select("a").attr("href"));
-				});
-			}
-		} catch (Exception e) {
-			return links;
-		}
-	}
 
 	private String retrievePostUrl(Element post) {
 		String lookForAuthor = post.select(".postmeta").toString();

@@ -3,11 +3,12 @@ package pl.pwr.edu.parser.writer.path;
 import pl.pwr.edu.parser.domain.Article;
 
 /**
- * @author Jakub Pomykala on 12/1/17.
- * @project parser
+ * W celu dodania kolejnych struktur katalogów
  */
 public interface PathResolver {
 
-	String resolvePath(Article article);
+	String resolveRelativePath(Article article);
+
+	String resolveFileName(Article article);
 
 }

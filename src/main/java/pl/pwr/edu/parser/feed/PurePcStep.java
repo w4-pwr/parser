@@ -12,6 +12,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.util.SchemaUtils;
@@ -21,17 +22,21 @@ import pl.pwr.edu.parser.util.TagUtils;
  * Created by Jakub Pomykała on 19/04/2017.
  */
 @Component
-public final class PurePcStep extends ParserTemplateStep {
+@Order(30)
+public class PurePcStep extends ParserTemplateStep {
 
 	private static final String BASE_URL = "https://www.purepc.pl";
 
 	@Override
-	public List<Article> parse() {
+	public void parse() {
 		int page = 0;
-		return getPageArticles(page);
+		while (page < 100) {
+			parseArticlesOnPage(page);
+			page++;
+		}
 	}
 
-	private List<Article> getPageArticles(int page) {
+	private void parseArticlesOnPage(int page) {
 		String articlePageUrl = getArticlePageUrl(page);
 		List<String> allArticleUrls = getAllArticleUrlsFromUrl(articlePageUrl);
 		allArticleUrls
@@ -40,8 +45,6 @@ public final class PurePcStep extends ParserTemplateStep {
 				.filter(Optional::isPresent)
 				.map(Optional::get)
 				.forEach(this::writeArticle);
-
-		return Lists.newArrayList();
 	}
 
 	private String getArticlePageUrl(int page) {
@@ -54,7 +57,6 @@ public final class PurePcStep extends ParserTemplateStep {
 			return extractAllArticleLinks(document);
 		} catch (IOException e) {
 			System.err.print("Cannot fetch article urls, " + e.getMessage());
-			e.printStackTrace();
 			return Collections.emptyList();
 		}
 	}
@@ -81,14 +83,12 @@ public final class PurePcStep extends ParserTemplateStep {
 		try {
 			Document articleDocument = fetchArticleDocument(articleUrl);
 			Article article = extractArticle(articleDocument);
-			System.out.println(article);
 			return Optional.of(article);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (IllegalArgumentException iae) {
 			System.err.println("Cannot fetch article: " + articleUrl + " -> " + iae.getMessage());
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (Exception ignored) {
 		}
 		return Optional.empty();
 	}

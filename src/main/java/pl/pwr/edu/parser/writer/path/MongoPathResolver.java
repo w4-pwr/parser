@@ -9,7 +9,12 @@ import pl.pwr.edu.parser.domain.Article;
 public final class MongoPathResolver implements PathResolver {
 
 	@Override
-	public String resolvePath(Article article) {
+	public String resolveRelativePath(Article article) {
 		return "articles";
+	}
+
+	@Override
+	public String resolveFileName(Article article) {
+		return article.getTitle();
 	}
 }

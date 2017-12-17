@@ -1,6 +1,5 @@
 package pl.pwr.edu.parser.domain;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -16,7 +15,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
+@ToString(of = {"title", "source"})
 public class Article {
 
 	@Id
@@ -50,11 +49,6 @@ public class Article {
 
 	public void setMetadata(HashMap<String, String> metadata) {
 		this.metadata = metadata;
-	}
-
-	public List<Quote> getQuotes() {
-		//Nie poczeba
-		return Collections.emptyList();
 	}
 
 	public void setQuotes(List<Quote> quotes) {

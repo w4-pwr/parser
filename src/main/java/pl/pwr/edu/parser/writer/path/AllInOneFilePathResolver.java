@@ -8,8 +8,15 @@ import pl.pwr.edu.parser.domain.Article;
  */
 public final class AllInOneFilePathResolver implements PathResolver {
 
+	public final static String OUTPUT_FILE_NAME = "output";
+
 	@Override
-	public String resolvePath(Article article) {
-		return "output";
+	public String resolveRelativePath(Article article) {
+		return "";
+	}
+
+	@Override
+	public String resolveFileName(Article article) {
+		return OUTPUT_FILE_NAME;
 	}
 }

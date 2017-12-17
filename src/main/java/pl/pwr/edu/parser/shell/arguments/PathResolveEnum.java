@@ -5,5 +5,5 @@ package pl.pwr.edu.parser.shell.arguments;
  * @project parser
  */
 public enum PathResolveEnum {
-	ARTIST, ALL, SOURCE
+	ARTICLE, ALL, SOURCE
 }

@@ -3,12 +3,13 @@ package pl.pwr.edu.parser.writer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import org.jetbrains.annotations.NotNull;
 import pl.pwr.edu.parser.domain.Article;
-import pl.pwr.edu.parser.domain.ArticleAdapter;
 import pl.pwr.edu.parser.writer.path.PathByArticleResolver;
 import pl.pwr.edu.parser.writer.path.PathResolver;
 
@@ -20,6 +21,7 @@ public final class JsonWriter implements ArticleWriter {
 	private final String BASE_WRITE_PATH;
 	private ObjectMapper objectMapper;
 	private PathResolver pathResolver;
+	private Charset charset;
 
 	private JsonWriter(String path) {
 		this.BASE_WRITE_PATH = path;
@@ -33,17 +35,21 @@ public final class JsonWriter implements ArticleWriter {
 
 	@Override
 	public void write(Article article) throws IOException {
-		writeAndGetPath(article);
-	}
+		String relativePath = pathResolver.resolveRelativePath(article);
+		String absolutePath = BASE_WRITE_PATH + File.separator + relativePath;
+		Files.createDirectories(Paths.get(absolutePath));
+		String fileName = pathResolver.resolveFileName(article) + ".json";
+		String pathWithFileName = absolutePath + File.separator + fileName;
 
-	@Override
-	public Path writeAndGetPath(Article article) throws IOException {
-		Path path = getPath(article);
-		Files.createDirectories(path);
-		String fileName = getFileName(article);
-		String pathWithFileName = path + File.separator + fileName;
-		objectMapper.writeValue(new File(pathWithFileName), article);
-		return Paths.get(pathWithFileName);
+		String newLine = "\n";
+		String text = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(article) + newLine;
+		Path absolutePathToFile = Paths.get(pathWithFileName);
+		if (Files.exists(absolutePathToFile)) {
+			Files.write(absolutePathToFile, text.getBytes(charset), StandardOpenOption.APPEND);
+		} else {
+			Files.write(absolutePathToFile, text.getBytes(charset));
+		}
+
 	}
 
 	@Override
@@ -51,19 +57,9 @@ public final class JsonWriter implements ArticleWriter {
 		this.pathResolver = pathResolver;
 	}
 
-	@NotNull
-	private Path getPath(Article article) {
-		final String directoryPath = pathResolver.resolvePath(article);
-		return Paths.get(BASE_WRITE_PATH, File.separator, directoryPath);
+	@Override
+	public void setCharset(Charset charset) {
+		this.charset = charset;
 	}
 
-	@NotNull
-	private String getFileName(Article article) {
-		ArticleAdapter adapter = ArticleAdapter.of(article);
-		final String fileName = adapter.getCleanTitle();
-		final String JSON_EXTENSION = ".json";
-		return File.separator +
-				fileName +
-				JSON_EXTENSION;
-	}
 }

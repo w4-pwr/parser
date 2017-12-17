@@ -24,7 +24,7 @@ class PathByArticleResolverTest {
 		Article article = Article.builder().title("fajny tytuł").build();
 
 		//when
-		String resolvedPath = pathByArticleResolver.resolvePath(article);
+		String resolvedPath = pathByArticleResolver.resolveRelativePath(article);
 
 		//then
 		Assertions.assertThat(resolvedPath).isEqualTo("fajny-tytu");
@@ -36,7 +36,7 @@ class PathByArticleResolverTest {
 		Article article = null;
 
 		//when
-		String resolvedPath = pathByArticleResolver.resolvePath(article);
+		String resolvedPath = pathByArticleResolver.resolveRelativePath(article);
 
 		//then
 		Assertions.assertThat(resolvedPath).startsWith("no-title-");

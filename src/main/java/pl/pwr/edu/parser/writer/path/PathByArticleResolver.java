@@ -12,7 +12,12 @@ import pl.pwr.edu.parser.domain.ArticleAdapter;
 public final class PathByArticleResolver implements PathResolver {
 
 	@Override
-	public String resolvePath(Article article) {
+	public String resolveRelativePath(Article article) {
+		return "";
+	}
+
+	@Override
+	public String resolveFileName(Article article) {
 		return Optional.ofNullable(article)
 				.map(ArticleAdapter::of)
 				.map(ArticleAdapter::getCleanTitle)

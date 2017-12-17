@@ -2,13 +2,15 @@ package pl.pwr.edu.parser.writer;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Optional;
+import java.util.StringJoiner;
 import org.jetbrains.annotations.NotNull;
 import pl.pwr.edu.parser.domain.Article;
-import pl.pwr.edu.parser.domain.ArticleAdapter;
 import pl.pwr.edu.parser.writer.path.PathByArticleResolver;
 import pl.pwr.edu.parser.writer.path.PathResolver;
 
@@ -19,6 +21,7 @@ public final class TxtWriter implements ArticleWriter {
 
 	private final String BASE_WRITE_PATH;
 	private PathResolver pathResolver;
+	private Charset charset;
 
 	private TxtWriter(String path) {
 		this.BASE_WRITE_PATH = path;
@@ -31,15 +34,36 @@ public final class TxtWriter implements ArticleWriter {
 
 	@Override
 	public void write(Article article) throws IOException {
-		writeAndGetPath(article);
+		String relativePath = pathResolver.resolveRelativePath(article);
+		String absolutePath = BASE_WRITE_PATH + File.separator + relativePath;
+		Files.createDirectories(Paths.get(absolutePath));
+		String fileName = pathResolver.resolveFileName(article) + ".txt";
+		String pathWithFileName = absolutePath + File.separator + fileName;
+
+		String textToSave = getTextToSave(article);
+		Path absolutePathToFile = Paths.get(pathWithFileName);
+		if (Files.exists(absolutePathToFile)) {
+			Files.write(absolutePathToFile, textToSave.getBytes(charset), StandardOpenOption.APPEND);
+		} else {
+			Files.write(absolutePathToFile, textToSave.getBytes(charset));
+		}
 	}
 
-	@Override
-	public Path writeAndGetPath(Article article) throws IOException {
-		String pathWithFileName = getPathWithFileName(article);
-		String textBody = Optional.ofNullable(article.getBody()).orElse("");
-		Files.write(Paths.get(pathWithFileName), textBody.getBytes());
-		return Paths.get(pathWithFileName);
+	private String getTextToSave(Article article) {
+		Optional<Article> optionalArticle = Optional.ofNullable(article);
+		String textBody = optionalArticle
+				.map(Article::getBody)
+				.orElse("");
+
+		String author = optionalArticle
+				.map(Article::getMetadata)
+				.map(stringStringHashMap -> stringStringHashMap.get("author"))
+				.orElse("");
+
+		StringJoiner stringJoiner = new StringJoiner(",");
+		stringJoiner.add(textBody);
+		stringJoiner.add(author);
+		return stringJoiner.toString();
 	}
 
 	@Override
@@ -47,16 +71,9 @@ public final class TxtWriter implements ArticleWriter {
 		this.pathResolver = strategy;
 	}
 
-	@NotNull
-	private String getPathWithFileName(Article article) {
-		ArticleAdapter articleAdapter = ArticleAdapter.of(article);
-		final String directoryName = pathResolver.resolvePath(article);
-		final String fileName = articleAdapter.getCleanTitle();
-		final String TXT_EXTENSION = ".txt";
-		return BASE_WRITE_PATH +
-				File.separator +
-				directoryName +
-				File.separator +
-				fileName + TXT_EXTENSION;
+	@Override
+	public void setCharset(Charset charset) {
+		this.charset = charset;
 	}
+
 }

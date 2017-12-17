@@ -10,39 +10,32 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import pl.pwr.edu.parser.domain.Article;
 import pl.pwr.edu.parser.domain.Quote;
-import pl.pwr.edu.parser.log.LoadingBar;
 import pl.pwr.edu.parser.util.JsoupConnector;
 
 @Component
-public final class NaTematStep extends ParserTemplateStep {
+@Order(100)
+public class NaTematStep extends ParserTemplateStep {
 
 	private String yearToCheck = "";
 	private static String baseUrl = "http://natemat.pl";
 	private static String articleListUrl = "http://natemat.pl/posts-map/";
 
-	private static int SLEEP_TIME = 5500;
-	private int parsedArticles = 0;
+	private static int SLEEP_TIME = 500;
 
 	@Override
-	public List<Article> parse() {
+	public void parse() {
 		List<String> links = getArticlesLinks();
-		int size = links.size();
-		LoadingBar loadingBar = new LoadingBar();
-		loadingBar.setHorizontalMaxNumber(size);
 		links.parallelStream()
-				.peek(a -> loadingBar.indicateHorizontalLoading(parsedArticles))
 				.forEach(this::parse);
-		return new ArrayList<>();
 	}
 
 	private void parse(String link) {
 		Optional<Article> article = Optional.ofNullable(parseLink(link));
-		parsedArticles++;
 		article.ifPresent(this::writeArticle);
-
 	}
 
 	private List<String> getSubcategoriesLinks() {
@@ -64,14 +57,11 @@ public final class NaTematStep extends ParserTemplateStep {
 	}
 
 	private List<String> getArticlesLinks() {
-		LoadingBar loadingBar = new LoadingBar();
-
 		List<String> subcategoriesLinks = getSubcategoriesLinks();
-		loadingBar.createVerticalLoadingBar(subcategoriesLinks.size());
-		return subcategoriesLinks.parallelStream().
-				map(this::getArticlesForSubcategory)
-				.peek(s -> loadingBar.indicateVerticalLoading())
-				.flatMap(List::stream).collect(Collectors.toList());
+		return subcategoriesLinks.parallelStream()
+				.map(this::getArticlesForSubcategory)
+				.flatMap(List::stream)
+				.collect(Collectors.toList());
 	}
 
 	private List<String> getArticlesForSubcategory(String s) {
