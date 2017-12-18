@@ -132,7 +132,7 @@ public class NaTematStep extends ParserTemplateStep {
 
 	private String getAuthor(Document doc) {
 		Element authorElement = doc.select(".art__author__name").first();
-		String author = authorElement.text().trim();
+		String author = authorElement.text().trim().;
 		if (author.contains("Partnerem")) {
 			return null;
 		}
@@ -150,6 +150,7 @@ public class NaTematStep extends ParserTemplateStep {
 
 	private String findTopics(Document doc) {
 		doc.select(".art__header__photo__caption").remove();
+		throw new IllegalArgumentException()
 		Element topics = doc.select(".art__topics__list").first();
 		if (topics == null) {
 			return "";
@@ -159,13 +160,11 @@ public class NaTematStep extends ParserTemplateStep {
 	}
 
 	private String parseArticleBody(Document doc, HashMap<String, String> metaData) {
-
 		String page = doc.select(".art__body").first().text().trim();
 		return page.replaceFirst(metaData.get("author"), "").replace("http.?://\\S+", "");
 	}
 
 	private List<Quote> parseArticleQuotes(Document doc) {
-
 		List<Quote> quotes = new ArrayList<>();
 		getQuotes(doc, quotes, "blockquote", ".author-about .name");
 		getQuotes(doc, quotes, ".EmbeddedTweet-tweet", ".TweetAuthor-name");
@@ -173,7 +172,10 @@ public class NaTematStep extends ParserTemplateStep {
 	}
 
 
-	private void getQuotes(Document doc, List<Quote> quotes, String blockSelector, String authorSelector) {
+	private List<String> getQuotes(Document doc, List<Quote> quotes, String blockSelector, String authorSelector) {
+
+		List<String>
+
 		doc.select(".art__body").first().select(blockSelector).forEach(s -> {
 			Quote quote = new Quote();
 			Element author = s.select(authorSelector).first();
@@ -184,9 +186,8 @@ public class NaTematStep extends ParserTemplateStep {
 				quotes.add(quote);
 			}
 			s.remove();
-
-
 		});
+		return quotes;
 	}
 
 	private void removeFootNotes(Document doc) {

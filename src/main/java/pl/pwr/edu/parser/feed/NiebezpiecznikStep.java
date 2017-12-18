@@ -112,5 +112,4 @@ public class NiebezpiecznikStep extends ParserTemplateStep {
 			return null;
 		}
 	}
-
 }

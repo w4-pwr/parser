@@ -37,6 +37,7 @@ public class ParserChain {
 				.map(ParserTemplateStep::getClass)
 				.map(Class::getSimpleName)
 				.forEach(System.out::println);
+
 		System.out.println("Starting...");
 		parsingSteps.stream()
 				.peek(this::logParserName)

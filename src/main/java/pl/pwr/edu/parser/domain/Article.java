@@ -52,7 +52,6 @@ public class Article {
 	}
 
 	public void setQuotes(List<Quote> quotes) {
-		//Tego też nie czeba
 	}
 
 	public String getSource() {
